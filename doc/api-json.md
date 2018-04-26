@@ -1,4 +1,4 @@
-# Soldo Daemon's JSON RPC API
+# Goldo Daemon's JSON RPC API
 
 ## GETBLOCKCOUNT
 

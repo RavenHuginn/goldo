@@ -1,4 +1,4 @@
-# Soldo Daemon's HTTP API
+# Goldo Daemon's HTTP API
 
 ## GETINFO
 

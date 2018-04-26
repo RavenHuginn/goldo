@@ -1,6 +1,6 @@
 Oxygen version:
  Build #45
-  - core: new mining curve 2.5M - 10M added;
+  - core: Initial fork from Soldo;
 
 Nitrogen version:
  Build #43

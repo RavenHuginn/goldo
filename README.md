@@ -1,17 +1,17 @@
-# Soldo
+# Goldo
 
-Soldo is a novel coin based on the modified Cryptonote PoW algorithm called SoftCrypton.
+Goldo is a novel coin based on the modified Cryptonote PoW algorithm called SoftCrypton.
 
-Soldo was designed as a light alternative to current Cryptonote-based coins.
+Goldo was designed as a light alternative to current Cryptonote-based coins.
 It should be mineable even with low-end PCs, including phones and tablets.
 Blockchain size and network load plan to stay at reasonable level as well.
-Transfer's tiny flat fee is another key point of Soldo for everyday use.
+Transfer's tiny flat fee is another key point of Goldo for everyday use.
 
 ## Windows Users
 
-### Download pre-compiled Soldo apps
+### Download pre-compiled Goldo apps
 
-Latest Soldo releases could be found at https://github.com/monselice/sld/releases
+Latest Goldo releases could be found at https://github.com/monselice/sld/releases
 
 Download ZIP-archive and unpack it to a folder (c:\Bin\Bit)
 
@@ -108,7 +108,7 @@ Use miner app:
 
 Start miner.bat.
 
-### Building Soldo
+### Building Goldo
 
 You have to install follow software:
 
@@ -138,7 +138,7 @@ https://github.com/monselice/sld
 or clone from Github
 git clone https://github.com/monselice/sld.git sld
 
-To build Soldo apps, change to a directory where this file is located (x:\git\), and run commands:
+To build Goldo apps, change to a directory where this file is located (x:\git\), and run commands:
 
 ```
 x:
@@ -147,7 +147,7 @@ mkdir build
 cd build
 
 cmake -G "Visual Studio 14 2015 Win64" -DBOOST_ROOT=X:/boost_1_65_1 -DBOOST_LIBRARYDIR=X:/boost_1_65_1/lib64-msvc-14.0 ..
-MSBuild Soldo.sln /p:Configuration=release /m
+MSBuild Goldo.sln /p:Configuration=release /m
 ```
 The resulting executables can be found in X:\Git\sld\build\src\Release
 
@@ -157,12 +157,12 @@ Sometimes daemon get stuck and you need to perform some actions.
 
 #### Clear blockchain and other data
 
-To remove Soldo data, press [Win+R] key, type %APPDATA%, and delete sld folder if you have one.
+To remove Goldo data, press [Win+R] key, type %APPDATA%, and delete sld folder if you have one.
 
 
 ## Linux Users
 
-### Building Soldo
+### Building Goldo
 
 Dependencies: GCC 4.7.3 or later, CMake 2.8.6 or later, and Boost 1.56 or later.
 

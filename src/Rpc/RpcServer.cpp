@@ -340,8 +340,8 @@ bool RpcServer::onGetPoolChangesLite(const COMMAND_RPC_GET_POOL_CHANGES_LITE::re
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 bool RpcServer::on_get_blockchain_settings(const COMMAND_RPC_GET_BLOCKCHAIN_SETTINGS::request& req, COMMAND_RPC_GET_BLOCKCHAIN_SETTINGS::response& res) {
-  res.base_coin.name = "soldo";
-  res.base_coin.git = "https://github.com/monselice/sld.git";
+  res.base_coin.name = "Goldo";
+  res.base_coin.git = "https://github.com/monselice/goldo.git";
 
   res.core.DIFFICULTY_TARGET = m_core.getCurrency().difficultyTarget();
   res.core.CRYPTONOTE_DISPLAY_DECIMAL_POINT = m_core.getCurrency().numberOfDecimalPlaces();

@@ -2,8 +2,7 @@
 // Copyright (c) 2014-2017 XDN-project developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-// SLD and ZZP proposal [--- SLD ---]
-
+// GOLDO
 #pragma once
 
 #include <cstdint>
@@ -15,8 +14,8 @@ namespace parameters {
 const uint64_t CRYPTONOTE_MAX_BLOCK_NUMBER                   = 500000000;
 const size_t   CRYPTONOTE_MAX_BLOCK_BLOB_SIZE                = 500000000;
 const size_t   CRYPTONOTE_MAX_TX_SIZE                        = 1000000000;
-const uint64_t CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX       = 117;//Prefix of the wallet address: start with 135=ZZP, 117=SLD
-const size_t   CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW          = 18;// 4=ZZP, 18=SLD
+const uint64_t CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX       = 238;//Prefix of the wallet address: start with 135=GOLDO, 117=SLD
+const size_t   CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW          = 18;// 4=GOLDO, 18=SLD
 const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT            = 60 * 60 * 2;
 
 const size_t   BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW             = 30;
@@ -27,23 +26,23 @@ const size_t   CRYPTONOTE_REWARD_BLOCKS_WINDOW               = 100;
 const size_t   CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE     = 1048576; //size of block (bytes) after which reward for block calculated using block size
 const size_t   CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_V1  = 1048576;  //size of block (bytes) after which reward for block calculated using block size
 const size_t   CRYPTONOTE_COINBASE_BLOB_RESERVED_SIZE        = 600;
-const size_t   CRYPTONOTE_DISPLAY_DECIMAL_POINT              = 8;//8=SLD, 4=ZZP
+const size_t   CRYPTONOTE_DISPLAY_DECIMAL_POINT              = 8;//8=SLD, 4=GOLDO
 
-const uint64_t COIN                                          = UINT64_C(100000000);// COIN - number of smallest units in one coin: 10000=ZZP, 100000000=SLD
+const uint64_t COIN                                          = UINT64_C(100000000);// COIN - number of smallest units in one coin: 10000=GOLDO, 100000000=SLD
 const uint64_t MINIMUM_FEE                                   = UINT64_C(1);// Transactions with less than this fee wouldn’t be accepted by daemons
-const uint64_t DEFAULT_DUST_THRESHOLD                        = UINT64_C(2);//The amount bellow this value will be considered as dust: ZZP=1, SLD=2
+const uint64_t DEFAULT_DUST_THRESHOLD                        = UINT64_C(2);//The amount bellow this value will be considered as dust: GOLDO=1, SLD=2
 
-const uint64_t REAL_COINS_LIMITED_Z                          = UINT64_C(10000000);//Total amount of coins mineable with full reward: 10000000=SLD,10000000000=ZZP
-const uint64_t REAL_COINS_LOWSPEED_Z                          = UINT64_C(2500000);//Total amount of coins mineable with limited reward: 10000000=SLD,10000000000=ZZP
+const uint64_t REAL_COINS_LIMITED_Z                          = UINT64_C(25000000);//Total amount of coins mineable with full reward: 10000000=SLD,10000000000=GOLDO
+const uint64_t REAL_COINS_LOWSPEED_Z                         = UINT64_C(2500000);//Total amount of coins mineable with limited reward: 2500000=SLD,10000000000=GOLDO
 const uint64_t MONEY_SUPPLY_MINEABLE_Z                       = REAL_COINS_LIMITED_Z*COIN;//Total amount of atomic units mineable with full reward
 const uint64_t MONEY_SUPPLY_LOWSPEED_Z                       = REAL_COINS_LOWSPEED_Z*COIN;//Total amount of atomic units mineable with full reward
-const size_t   RUSH_BLOCKS_Z                                 = 1000;//Premium rewarded blocks count: ZZP=500, SLD=1000
-const uint64_t RUSH_REWARD_Z                                 = (UINT64_C(100)*COIN);//Reward for a premium block: ZZP=200000, SLD=100
-const uint64_t COMMON_REWARD_Z                               = (UINT64_C(1)*COIN);//Reward for an ordinary block: ZZP=1000, SLD=1
-const uint64_t GENESIS_BLOCK_REWARD_Z                        = (UINT64_C(50000)*COIN);//Premine amount, in atomic units: SLD=50000, ZZP=10.000.000
-const size_t   RUSH_REWARD_LOCK_Z                            = 750000;//Premium rewarded blocks lock time: ZZP=20000, SLD=750000
+const size_t   RUSH_BLOCKS_Z                                 = 1000;//Premium rewarded blocks count: GOLDO=500, SLD=1000
+const uint64_t RUSH_REWARD_Z                                 = (UINT64_C(100)*COIN);//Reward for a premium block: GOLDO=200000, SLD=100
+const uint64_t COMMON_REWARD_Z                               = (UINT64_C(1)*COIN);//Reward for an ordinary block: GOLDO=1000, SLD=1
+const uint64_t GENESIS_BLOCK_REWARD_Z                        = (UINT64_C(50000)*COIN);//Premine amount, in atomic units: SLD=50000, GOLDO=10.000.000
+const size_t   RUSH_REWARD_LOCK_Z                            = 750000;//Premium rewarded blocks lock time: GOLDO=20000, SLD=750000
 
-const uint64_t DIFFICULTY_TARGET                             = 20;//Difficulty target is an ideal time period between blocks, in seconds. 20=SLD, 720=ZZP
+const uint64_t DIFFICULTY_TARGET                             = 20;//Difficulty target is an ideal time period between blocks, in seconds. 20=SLD, 720=GOLDO
 const uint64_t EXPECTED_NUMBER_OF_BLOCKS_PER_DAY             = 24 * 60 * 60 / DIFFICULTY_TARGET;
 const size_t   DIFFICULTY_WINDOW                             = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY/12; // blocks
 const size_t   DIFFICULTY_CUT                                = 60;//Timestamps to cut after sorting
@@ -51,9 +50,9 @@ const size_t   DIFFICULTY_LAG                                = 20;//Lag of calcu
 
 static_assert(2 * DIFFICULTY_CUT <= DIFFICULTY_WINDOW - 2, "Bad DIFFICULTY_WINDOW or DIFFICULTY_CUT");
 
-const size_t   DIFFICULTY_FNC_VER                            = 0;//0=SLD, 2=ZZP
-const uint32_t DIFFICULTY_ZAWY_START_BLOCK                   = 24000;//24000=SLD, 1=ZZP
-const size_t   DIFFICULTY_ZAWY_WINDOW                        = 30;//30=SLD, 12=ZZP
+const size_t   DIFFICULTY_FNC_VER                            = 0;//0=SLD, 2=GOLDO
+const uint32_t DIFFICULTY_ZAWY_START_BLOCK                   = 24000;//24000=SLD, 1=GOLDO
+const size_t   DIFFICULTY_ZAWY_WINDOW                        = 30;//30=SLD, 12=GOLDO
 
 const uint64_t DEPOSIT_MIN_AMOUNT                            = 1 * COIN;
 const uint32_t DEPOSIT_MIN_TERM                              = 11000;
@@ -98,15 +97,15 @@ const char     CRYPTONOTE_BLOCKCHAIN_INDICES_FILENAME[]      = "chainidx.dat";
 const char     MINER_CONFIG_FILE_NAME[]                      = "common.json";
 } // parameters
 
-const uint64_t TIMESTAMP_HACK_1_BLOCK_HEIGHT_Z               = 377777;//400000=SLD, 1=ZZP
+const uint64_t TIMESTAMP_HACK_1_BLOCK_HEIGHT_Z               = 377777;//400000=SLD, 1=GOLDO
 const uint64_t TIMESTAMP_HACK_1_FUTURE_TIME_LIMIT_Z          = 60 * 7;//420 seconds/21 block = SLD
 
 const uint64_t START_BLOCK_REWARD                            = (UINT64_C(320000) * parameters::COIN);
 const uint64_t MIN_BLOCK_REWARD                              = (UINT64_C(150) * parameters::COIN);
 const uint64_t REWARD_HALVING_INTERVAL                       = (UINT64_C(11000));
 
-const char     CRYPTONOTE_TICKER[]                           = "sld";
-const char     CRYPTONOTE_NAME[]                             = "Soldo";
+const char     CRYPTONOTE_TICKER[]                           = "goldo";
+const char     CRYPTONOTE_NAME[]                             = "Goldo";
 
 const char GENESIS_COINBASE_TX_HEX[] = "010101ff00002101f0c11cb027ca12cb2b52d82bbe1851432ca1aabc5362375cddfb1c9606a8d135";
 
@@ -114,8 +113,8 @@ const uint32_t GENESIS_NONCE                                 = 24;
 const char     GENESIS_WALLET_Z[]                            = "LaFwtcPWr5KhN5q1t5BYjxG6HqYph1x7B49AVdeWUewC1dMrFzXMuuJBo5YHQQRqQy7wRWQnctEcDY1eRQn76APPQycHeuj";
 
 //CRYPTONOTE_NETWORK is defined @ \P2p\P2pNetworks.h
-//CRYPTONOTE_NETWORK = 24d91a1b-3aa0-6ddf-3eab-e0b4fb48f9e9
-//const static boost::uuids::uuid CRYPTONOTE_NETWORK = { { 0x24, 0xD9, 0x1A, 0x1B, 0x3A, 0xA0, 0x6D, 0xDF, 0x3E, 0xAB, 0xE0, 0xB4, 0xFB, 0x48, 0xF9, 0xE9 } };
+//CRYPTONOTE_NETWORK = 24d91a1b-3aa0-6ddf-7bab-e0b4fb48f9e9
+//const static boost::uuids::uuid CRYPTONOTE_NETWORK = { { 0x24, 0xD9, 0x1A, 0x1B, 0x3A, 0xA0, 0x6D, 0xDF, 0x7B, 0xAB, 0xE0, 0xB4, 0xFB, 0x48, 0xF9, 0xE9 } };
 
 const uint8_t  TRANSACTION_VERSION_1                         =  1;
 const uint8_t  TRANSACTION_VERSION_2                         =  2;
@@ -130,8 +129,8 @@ const size_t   BLOCKS_IDS_SYNCHRONIZING_DEFAULT_COUNT        =  10000;  //by def
 const size_t   BLOCKS_SYNCHRONIZING_DEFAULT_COUNT            =  128;    //by default, blocks count in blocks downloading
 const size_t   COMMAND_RPC_GET_BLOCKS_FAST_MAX_COUNT         =  1000;
 
-const int      P2P_DEFAULT_PORT                              = 33711;//ZZP=33721, SLD=33711
-const int      RPC_DEFAULT_PORT                              = 33712;//ZZP=33722, SLD=33712
+const int      P2P_DEFAULT_PORT                              = 33721;//GOLDO=33721, SLD=33711
+const int      RPC_DEFAULT_PORT                              = 33722;//GOLDO=33722, SLD=33712
 
 const size_t   P2P_LOCAL_WHITE_PEERLIST_LIMIT                =  512;
 const size_t   P2P_LOCAL_GRAY_PEERLIST_LIMIT                 =  2048;
@@ -146,15 +145,15 @@ const uint32_t P2P_DEFAULT_CONNECTION_TIMEOUT                = 5000;          //
 const uint32_t P2P_DEFAULT_PING_CONNECTION_TIMEOUT           = 2000;          // 2 seconds
 const uint64_t P2P_DEFAULT_INVOKE_TIMEOUT                    = 60 * 2 * 1000; // 2 minutes
 const size_t   P2P_DEFAULT_HANDSHAKE_INVOKE_TIMEOUT          = 5000;          // 5 seconds
-const char     P2P_STAT_TRUSTED_PUB_KEY[]                    = "ab99e468743e62c86e6d07a0db4f26db5fa6c46dc2ee899b459b3a205385d460";
+const char     P2P_STAT_TRUSTED_PUB_KEY[]                    = "2a0b780aa4dc2f95cf4251c5c1cdab5205e75edef907e74de6226df2a5778ea5";
 
 const std::initializer_list<const char*> SEED_NODES = {
-	"s1.soldo.in:33711",  
-	"s2.soldo.in:33711",  
-	"s3.soldo.in:33711",  
-	"s4.soldo.in:33711",  
-	"s5.soldo.in:33711",  
-	"s6.soldo.in:33711",  
+	"s1.soldo.in:33721",  
+	"s2.soldo.in:33721",  
+	"s3.soldo.in:33721",  
+	"s4.soldo.in:33721",  
+	"s5.soldo.in:33721",  
+	"s6.soldo.in:33721",  
 };
 
 struct CheckpointData {

@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 2.8.6)
 
-set(VERSION "5.37")
+set(VERSION "45")
 # Packaged from commit 1febccfaee880955ac5acab479fc0e3c6f3aa7c6
 set(COMMIT 1febccfae)
-set(REFS " (HEAD -> master, tag: v5.37)")
+set(REFS " (HEAD -> master, tag: build 45)")
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set(CMAKE_CONFIGURATION_TYPES Debug RelWithDebInfo Release CACHE TYPE INTERNAL)
@@ -12,7 +12,7 @@ set(CMAKE_SKIP_PACKAGE_ALL_DEPENDENCY ON)
 set(CMAKE_SUPPRESS_REGENERATION ON)
 enable_testing()
 
-project(Soldo)
+project(Goldo)
 
 include_directories(include src external "${CMAKE_BINARY_DIR}/version")
 if(APPLE)
