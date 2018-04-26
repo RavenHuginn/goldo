@@ -1,0 +1,88 @@
+Oxygen version:
+ Build #45
+  - core: new mining curve 2.5M - 10M added;
+
+Nitrogen version:
+ Build #43
+  - daemon: public node mode;
+ Build #42
+  - wallet: restore from legacy key implemented; 
+ Build #41
+  - added reset param in CreateAddress method @ PayGate;
+ Build #40
+  - rollback changes made @ build #39;
+ Build #39
+  - strict time sync while mining requred now;
+
+Carbon version:
+ Build #38
+  - minor bugs fixed in RpcServer;
+  - payments-quick-start.md posted;
+ Build #37
+  - first release rebranded to Soldo;
+  - daemon: print_stat command renamed to stat
+  - daemon: print_pl command renamed to peers
+  - daemon: print_cn command renamed to connects
+  - daemon: print_block command renamed to block
+  - daemon: print_bc command renamed to chain
+  - daemon: print_tx command renamed to tx
+  - daemon: print_pool command renamed to pool
+  - daemon: print_pool_sh command renamed to pool_sh
+  - daemon: set_log command renamed to log
+
+Boron version:
+ Build #35
+  - daemon: TRANSACTIONS_POOL_JSON JSON RPC method added;
+ Build #34
+  - daemon: TRANSACTION_JSON JSON RPC method added;
+ Build #33
+  - daemon: BLOCK_JSON JSON RPC method added;
+ Build #32
+  - daemon: BLOCKS_LIST_JSON JSON RPC method added;
+ Build #31
+  - daemon: GETBLOCKHASH method JSON RPC error fixed;
+  - daemon: statistic details added;
+  - core: fixed old Ubuntu 17 compilng bug in rs_comm_size function.
+  - daemon: fixed STOP_DAEMON HTTP RPC method;
+  
+Beryllium version:
+ Build #29
+  - core: Difficulty algo changed to prevent botnets attacks;
+  
+Lithium version:
+ Build #27
+  - miner: hashrate calculation;
+  - miner: round time calculation;
+ Build #25
+  - wallet: paper wallets generation;
+  - linux CMake errors fixed;
+ Build #24
+  - wallet: restore wallets by seed;
+  - wallet: restore wallets by keys;  
+
+Helium version:
+ Build #23
+  - wallet: you can choose between MODERN and CLASSIC wallet while creating;
+ Build #22
+  - minimal fee issue fixed;
+  - introduced Classic and Modern wallets;
+ Build #21
+  - wallet: list_transfers command terminated;
+  - wallet: list command created created instead of list_transfers;
+  - wallet: incoming_transfers command terminated;
+  - wallet: incoming command created instead of incoming_transfers;
+  - wallet: comments command print all transaction's comments;  
+  - wallet: seed command shows wallet's seed;  
+ Build #19
+  - linux compiling errors fixed;
+  - wallet: view keys;
+  - wallet: keys backup while new wallet creation;
+  - minor changes;
+  
+Hydrogen version:
+ Build #18
+  - First checkpoins;
+  - Minor fixes;
+ Build #17
+  - First public release;
+ 
