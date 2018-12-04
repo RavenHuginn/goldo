@@ -1,7 +1,5 @@
 // Copyright (c) 2011-2016 The Cryptonote developers
 // Copyright (c) 2014-2017 XDN-project developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #pragma once
 
@@ -29,11 +27,12 @@
 #include "crypto/electrum-words.h"
 namespace CryptoNote
 {
-  /************************************************************************/
-  /*                                                                      */
-  /************************************************************************/
-  class simple_wallet : public CryptoNote::INodeObserver, public CryptoNote::IWalletLegacyObserver, public CryptoNote::INodeRpcProxyObserver {
-  public:
+	class simple_wallet : 
+		public CryptoNote::INodeObserver, 
+		public CryptoNote::IWalletLegacyObserver, 
+		public CryptoNote::INodeRpcProxyObserver 
+	{
+  	public:
     simple_wallet(System::Dispatcher& dispatcher, const CryptoNote::Currency& currency, Logging::LoggerManager& log);
 
     bool init(const boost::program_options::variables_map& vm);
@@ -72,6 +71,15 @@ namespace CryptoNote
 		bool is_copy,
 		bool is_deterministic
 	);
+		
+		bool view_wallet
+		(
+			const std::string &wallet_file, 
+			const std::string& password, 
+			const CryptoNote::AccountPublicAddress& address, 
+			const Crypto::SecretKey& viewkey
+		);
+		
     bool open_wallet(const std::string &wallet_file, const std::string& password);
     bool close_wallet();
     bool help(const std::vector<std::string> &args = std::vector<std::string>());
@@ -82,6 +90,7 @@ namespace CryptoNote
     bool show_incoming_transfers(const std::vector<std::string> &args);
     bool show_payments(const std::vector<std::string> &args);
     bool show_blockchain_height(const std::vector<std::string> &args);
+	bool read_only_wallet(const std::vector<std::string> &args);
     bool paper(const std::vector<std::string> &args);
     bool paper_prn(const std::vector<std::string> &args);
     bool listTransfers(const std::vector<std::string> &args);
@@ -100,9 +109,7 @@ namespace CryptoNote
 	bool try_seed(std::string& electrum_words, AccountKeys keys);
 	bool print_paper_wallet_to_stream(bool _is_to_file, std::ostream& _stream);
 	bool print_paper_wallet(const std::string _file_name);
-
-	
-	//std::string get_tx_time_str(const WalletLegacyTransaction& txInfo);	
+	bool create_read_only_wallet(const std::string &wallet_file, const std::string& password);
 //$$$$
     void printConnectionError() const;
 

@@ -117,6 +117,13 @@ public:
 		bool is_deterministic
 	) = 0;
 	
+	virtual void RestoreReadOnly
+	(
+		const std::string& password, 
+		const CryptoNote::AccountPublicAddress& address, 
+		const Crypto::SecretKey& viewkey
+	) = 0;
+		
   virtual void initAndLoad(std::istream& source, const std::string& password) = 0;
   virtual void initWithKeys(const AccountKeys& accountKeys, const std::string& password) = 0;
   virtual void shutdown() = 0;

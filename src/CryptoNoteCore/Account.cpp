@@ -19,18 +19,17 @@ void AccountBase::setNull() {
 void AccountBase::generate() {
   Crypto::generate_keys(m_keys.address.spendPublicKey, m_keys.spendSecretKey);
   Crypto::generate_keys(m_keys.address.viewPublicKey, m_keys.viewSecretKey);
-  m_creation_timestamp = time(NULL);
+  m_creation_timestamp = 1509321600;
 }
 //-----------------------------------------------------------------
 const AccountKeys &AccountBase::getAccountKeys() const {
   return m_keys;
 }
-
+//-----------------------------------------------------------------
 void AccountBase::setAccountKeys(const AccountKeys &keys) {
   m_keys = keys;
 }
 //-----------------------------------------------------------------
-
 void AccountBase::serialize(ISerializer &s) {
   s(m_keys, "m_keys");
   s(m_creation_timestamp, "m_creation_timestamp");
@@ -64,25 +63,22 @@ Crypto::SecretKey AccountBase::generate_or_recover(const Crypto::SecretKey& reco
 		secondary_key, 
 		is_deterministic);
 
-	struct tm timestamp;
+	m_creation_timestamp = 1509321600;
 	
-	timestamp.tm_year = 2017 - 1900;  // 2017-11-14
-	timestamp.tm_mon = 11 - 1;
-	timestamp.tm_mday = 14;
-	timestamp.tm_hour = 0;
-	timestamp.tm_min = 0;
-	timestamp.tm_sec = 0;
-
-	if (is_recovery)
-		{
-			m_creation_timestamp = mktime(&timestamp);
-		}
-	else
-		{
-			m_creation_timestamp = time(NULL);
-		}
-		
 	return like_seed;
 }
 //-----------------------------------------------------------------
+void AccountBase::create_read_only(const CryptoNote::AccountPublicAddress& address, const Crypto::SecretKey& viewkey) {
+
+	Crypto::SecretKey zero;
+
+    memset(&zero, 0, sizeof(zero));
+
+	m_keys.address = address;
+	m_keys.spendSecretKey = zero;
+	m_keys.viewSecretKey = viewkey;
+	m_creation_timestamp = 1509321600;
+}
+//-----------------------------------------------------------------
+
 }

@@ -11,7 +11,7 @@ Transfer's tiny flat fee is another key point of Goldo for everyday use.
 
 ### Download pre-compiled Goldo apps
 
-Latest Goldo releases could be found at https://github.com/monselice/sld/releases
+Latest Goldo releases could be found at https://github.com/monselice/goldo/releases
 
 Download ZIP-archive and unpack it to a folder (c:\Bin\Bit)
 

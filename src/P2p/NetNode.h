@@ -126,6 +126,7 @@ namespace CryptoNote
     void serialize(ISerializer& s);
 
     // debug functions
+    bool log_alive();
     bool log_peerlist();
     bool log_connections();
     virtual uint64_t get_connections_count() override;

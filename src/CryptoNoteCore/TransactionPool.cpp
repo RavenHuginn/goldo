@@ -156,10 +156,15 @@ namespace CryptoNote {
     if (!keptByBlock) {
       std::lock_guard<std::recursive_mutex> lock(m_transactions_lock);
       if (haveSpentInputs(tx)) {
-        logger(INFO) << "Transaction with id= " << id << " used already spent inputs";
-        tvc.m_verifivation_failed = true;
-        return false;
-      }
+			logger(INFO, RED) 
+				<< "Transaction with id = " 
+				<< id 
+				<< " used already spent inputs";
+			
+        	tvc.m_verifivation_failed = true;
+
+			return false;
+		}
     }
 
     BlockInfo maxUsedBlock;

@@ -32,6 +32,7 @@ DaemonCommandsHandler::DaemonCommandsHandler(CryptoNote::core& core, CryptoNote:
   m_consoleHandler.setHandler("exit", boost::bind(&DaemonCommandsHandler::exit, this, _1), "Shutdown the daemon");
   m_consoleHandler.setHandler("help", boost::bind(&DaemonCommandsHandler::help, this, _1), "Show this help");
   m_consoleHandler.setHandler("peers", boost::bind(&DaemonCommandsHandler::print_pl, this, _1), "Print peer list");
+  m_consoleHandler.setHandler("alive", boost::bind(&DaemonCommandsHandler::print_alive, this, _1), "Print alive peers");
   m_consoleHandler.setHandler("connects", boost::bind(&DaemonCommandsHandler::print_cn, this, _1), "Print connections");
   m_consoleHandler.setHandler("chain", boost::bind(&DaemonCommandsHandler::print_bc, this, _1), "Print blockchain info in a given blocks range, print_bc <begin_height> [<end_height>]");
   //m_consoleHandler.setHandler("print_bci", boost::bind(&DaemonCommandsHandler::print_bci, this, _1));
@@ -78,7 +79,12 @@ bool DaemonCommandsHandler::print_pl(const std::vector<std::string>& args) {
   m_srv.log_peerlist();
   return true;
 }
-//--------------------------------------------------------------------------------
+///////////////////////////////////////////////////////////////////////////////
+bool DaemonCommandsHandler::print_alive(const std::vector<std::string>& args) {
+	m_srv.log_alive();
+	return true;
+}
+///////////////////////////////////////////////////////////////////////////////
 bool DaemonCommandsHandler::show_hr(const std::vector<std::string>& args)
 {
   if (!m_core.get_miner().is_mining())
@@ -160,7 +166,7 @@ bool DaemonCommandsHandler::print_bci(const std::vector<std::string>& args)
 bool DaemonCommandsHandler::set_log(const std::vector<std::string>& args)
 {
   if (args.size() != 1) {
-    std::cout << "use: log <log_level_number_0-5>" << ENDL;
+    std::cout << "use: log <log_level_number_0-4>" << ENDL;
     return true;
   }
 

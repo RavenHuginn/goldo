@@ -447,8 +447,7 @@ bool Blockchain::init(const std::string& config_folder, bool load_existing) {
     if (!(firstBlockHash == m_currency.genesisBlockHash())) {
       logger(ERROR, BRIGHT_RED) << "Failed to init: genesis block mismatch. "
         "Probably you set --testnet flag with data "
-        "dir with non-test blockchain or another "
-        "network.";
+        "dir with non-test blockchain or another network.";
       return false;
     }
   }
@@ -823,7 +822,7 @@ bool Blockchain::switch_to_alternative_blockchain(std::list<blocks_ext_by_hash::
 
   sendMessage(BlockchainMessage(ChainSwitchMessage(std::move(blocksFromCommonRoot))));
 
-  logger(INFO, BRIGHT_GREEN) << "REORGANIZE SUCCESS! on height: " << split_height << ", new blockchain size: " << m_blocks.size();
+  logger(INFO, BRIGHT_CYAN) << "REORGANIZE SUCCESS on height: " << split_height << ", new blockchain size: " << m_blocks.size();
   return true;
 }
 
@@ -996,22 +995,32 @@ bool Blockchain::complete_timestamps_vector(uint64_t start_top_height, std::vect
   } while (start_top_height != stop_offset);
   return true;
 }
-
 bool Blockchain::handle_alternative_block(const Block& b, const Crypto::Hash& id, block_verification_context& bvc, bool sendNewAlternativeBlockMessage) {
+
   std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
 
   auto block_height = get_block_height(b);
   if (block_height == 0) {
-    logger(ERROR, BRIGHT_RED) <<
-      "Block with id: " << Common::podToHex(id) << " (as alternative) have wrong miner transaction";
+		logger(ERROR, BRIGHT_RED) 
+			<< "Block with id: " 
+			<< Common::podToHex(id) 
+			<< " (as alternative) have wrong miner transaction"
+			<< ENDL;
+			
     bvc.m_verifivation_failed = true;
     return false;
   }
+	if (!m_checkpoints.is_alternative_block_allowed(getCurrentBlockchainHeight(), block_height)) {
+		logger(TRACE) 
+			<< "Block with id: " 
+			<< id 
+			<< std::endl 
+			<< " can't be accepted for alternative chain, block height: " 
+			<< block_height 
+			<< std::endl 
+			<< " blockchain height: " 
+			<< getCurrentBlockchainHeight();
 
-  if (!m_checkpoints.is_alternative_block_allowed(getCurrentBlockchainHeight(), block_height)) {
-    logger(TRACE) << "Block with id: " << id << std::endl <<
-      " can't be accepted for alternative chain, block height: " << block_height << std::endl <<
-      " blockchain height: " << getCurrentBlockchainHeight();
     bvc.m_verifivation_failed = true;
     return false;
   }
@@ -1028,7 +1037,10 @@ bool Blockchain::handle_alternative_block(const Block& b, const Crypto::Hash& id
 
   size_t cumulativeSize;
   if (!getBlockCumulativeSize(b, cumulativeSize)) {
-    logger(TRACE) << "Block with id: " << id << " has at least one unknown transaction. Cumulative size is calculated imprecisely";
+		logger(TRACE) 
+			<< "Block with id: " 
+			<< id 
+			<< " has at least one unknown transaction. Cumulative size is calculated imprecisely";
   }
 
   if (!checkCumulativeBlockSize(id, cumulativeSize, block_height)) {
@@ -1057,22 +1069,42 @@ bool Blockchain::handle_alternative_block(const Block& b, const Crypto::Hash& id
 
     if (alt_chain.size()) {
       //make sure that it has right connection to main chain
-      if (!(m_blocks.size() > alt_chain.front()->second.height)) { logger(ERROR, BRIGHT_RED) << "main blockchain wrong height"; return false; }
+		
+		if (!(m_blocks.size() > alt_chain.front()->second.height)) { 
+			logger(ERROR, BRIGHT_RED) << "main blockchain wrong height"; 
+			return false; 
+		}
+			
       Crypto::Hash h = NULL_HASH;
       get_block_hash(m_blocks[alt_chain.front()->second.height - 1].bl, h);
-      if (!(h == alt_chain.front()->second.bl.previousBlockHash)) { logger(ERROR, BRIGHT_RED) << "alternative chain have wrong connection to main chain"; return false; }
+		
+		if (!(h == alt_chain.front()->second.bl.previousBlockHash)) { 
+			logger(ERROR, BRIGHT_RED) << "alternative chain have wrong connection to main chain"; 
+			return false; 
+		}
+		
       complete_timestamps_vector(alt_chain.front()->second.height - 1, timestamps);
     } else {
-      if (!(mainPrev)) { logger(ERROR, BRIGHT_RED) << "internal error: broken imperative condition it_main_prev != m_blocks_index.end()"; return false; }
+		if (!(mainPrev)) { 
+			logger(ERROR, BRIGHT_RED) 
+				<< "internal error: broken imperative condition it_main_prev != m_blocks_index.end()"; 
+			return false; 
+		}
+		
       complete_timestamps_vector(mainPrevHeight, timestamps);
     }
 
     //check timestamp correct
     if (!check_block_timestamp(timestamps, b)) {
-      logger(INFO, BRIGHT_RED) <<
-        "Block with id: " << id
-        << ENDL << " for alternative chain, have invalid timestamp: " << b.timestamp;
-      //add_block_as_invalid(b, id);//do not add blocks to invalid storage before proof of work check was passed
+		logger(INFO, BRIGHT_RED) 
+			<< "Block with id: " 
+			<< id 
+			<< ENDL 
+			<< " for alternative chain, have invalid timestamp: " 
+			<< b.timestamp;
+			
+		//add_block_as_invalid(b, id);
+		//do not add blocks to invalid storage before proof of work check was passed
       bvc.m_verifivation_failed = true;
       return false;
     }
@@ -1083,8 +1115,8 @@ bool Blockchain::handle_alternative_block(const Block& b, const Crypto::Hash& id
 
     bool is_a_checkpoint;
     if (!m_checkpoints.check_block(bei.height, id, is_a_checkpoint)) {
-      logger(ERROR, BRIGHT_RED) <<
-        "CHECKPOINT VALIDATION FAILED";
+		logger(ERROR, BRIGHT_RED) 
+			<< "CHECKPOINT VALIDATION FAILED";
       bvc.m_verifivation_failed = true;
       return false;
     }
@@ -1092,20 +1124,31 @@ bool Blockchain::handle_alternative_block(const Block& b, const Crypto::Hash& id
     // Always check PoW for alternative blocks
     m_is_in_checkpoint_zone = false;
     difficulty_type current_diff = get_next_difficulty_for_alternative_chain(alt_chain, bei);
-    if (!(current_diff)) { logger(ERROR, BRIGHT_RED) << "!!!!!!! DIFFICULTY OVERHEAD !!!!!!!"; return false; }
+
+	if (!(current_diff)) { 
+		logger(ERROR, BRIGHT_RED) 
+			<< "!!!!!!! DIFFICULTY OVERHEAD !!!!!!!"; 
+		return false; 
+	}
+
     Crypto::Hash proof_of_work = NULL_HASH;
     if (!m_currency.checkProofOfWork(m_cn_context, bei.bl, current_diff, proof_of_work)) {
-      logger(INFO, BRIGHT_RED) <<
-        "Block with id: " << id
-        << ENDL << " for alternative chain, have not enough proof of work: " << proof_of_work
-        << ENDL << " expected difficulty: " << current_diff;
+		logger(INFO, BRIGHT_RED) 
+			<< "Block with id: " << id
+			<< ENDL << " for alternative chain, have not enough proof of work: " 
+			<< proof_of_work
+			<< ENDL << " expected difficulty: " 
+			<< current_diff;
+
       bvc.m_verifivation_failed = true;
       return false;
     }
 
     if (!prevalidate_miner_transaction(b, bei.height)) {
-      logger(INFO, BRIGHT_RED) <<
-        "Block with id: " << Common::podToHex(id) << " (as alternative) have wrong miner transaction.";
+		logger(INFO, BRIGHT_RED) 
+			<< "Block with id: " 
+			<< Common::podToHex(id) 
+			<< " (as alternative) have wrong miner transaction.";
       bvc.m_verifivation_failed = true;
       return false;
     }
@@ -1115,21 +1158,36 @@ bool Blockchain::handle_alternative_block(const Block& b, const Crypto::Hash& id
 
 #ifdef _DEBUG
     auto i_dres = m_alternative_chains.find(id);
-    if (!(i_dres == m_alternative_chains.end())) { logger(ERROR, BRIGHT_RED) << "insertion of new alternative block returned as it already exist"; return false; }
+		
+		if (!(i_dres == m_alternative_chains.end())) { 
+			logger(ERROR, BRIGHT_RED) 
+				<< "insertion of new alternative block returned as it already exist"; 
+				
+			return false;
+		}
 #endif
 
     auto i_res = m_alternative_chains.insert(blocks_ext_by_hash::value_type(id, bei));
-    if (!(i_res.second)) { logger(ERROR, BRIGHT_RED) << "insertion of new alternative block returned as it already exist"; return false; }
+	
+	if (!(i_res.second)) { 
+		logger(ERROR, BRIGHT_RED) 
+			<< "insertion of new alternative block returned as it already exist"; 
+		return false; 
+	}
 
     m_orthanBlocksIndex.add(bei.bl);
 
     alt_chain.push_back(i_res.first);
 
     if (is_a_checkpoint) {
-      //do reorganize!
-      logger(INFO, BRIGHT_GREEN) <<
-        "###### REORGANIZE on height: " << alt_chain.front()->second.height << " of " << m_blocks.size() - 1 <<
-        ", checkpoint is found in alternative chain on height " << bei.height;
+		//do reorganize if checkpoint is found in alternative chain
+		logger(INFO, BRIGHT_GREEN) 
+			<< "###### REORGANIZE on height: " 
+			<< alt_chain.front()->second.height 
+			<< " of " << m_blocks.size() - 1 
+			<< ", checkpoint is found in alternative chain on height " 
+			<< bei.height;
+			
       bool r = switch_to_alternative_blockchain(alt_chain, true);
       if (r) {
         bvc.m_added_to_main_chain = true;
@@ -1138,12 +1196,26 @@ bool Blockchain::handle_alternative_block(const Block& b, const Crypto::Hash& id
         bvc.m_verifivation_failed = true;
       }
       return r;
+		
+	} 
     } else if (m_blocks.back().cumulative_difficulty < bei.cumulative_difficulty) //check if difficulty bigger then in main chain
     {
       //do reorganize!
-      logger(INFO, BRIGHT_GREEN) <<
-        "###### REORGANIZE on height: " << alt_chain.front()->second.height << " of " << m_blocks.size() - 1 << " with cum_difficulty " << m_blocks.back().cumulative_difficulty
-        << ENDL << " alternative blockchain size: " << alt_chain.size() << " with cum_difficulty " << bei.cumulative_difficulty;
+		logger(INFO, BRIGHT_CYAN) 
+			<< "START REORGANIZE on height: " 
+			<< alt_chain.front()->second.height 
+			<< " of " << m_blocks.size() - 1 
+			<< " with total stored chain difficulty " 
+			<< m_blocks.back().cumulative_difficulty 
+			<< ENDL;
+			
+		logger(INFO, CYAN) 
+			<< "ALTERNATIVE blockchain size: " 
+			<< alt_chain.size() 
+			<< " with total alternative chain difficulty = " 
+			<< bei.cumulative_difficulty 
+			<< ENDL;
+		
       bool r = switch_to_alternative_blockchain(alt_chain, false);
       if (r) {
         bvc.m_added_to_main_chain = true;
@@ -1152,12 +1224,44 @@ bool Blockchain::handle_alternative_block(const Block& b, const Crypto::Hash& id
         bvc.m_verifivation_failed = true;
       }
       return r;
-    } else 
+		
+	} else //difficulty IS NOT bigger then in the main chain, so we just add block without reorganizing
 		{
-			logger(INFO, BRIGHT_CYAN) << ">->-> BLOCK ADDED AS ALTERNATIVE ON HEIGHT " << bei.height << ENDL;
-			logger(INFO, YELLOW) << "ID:\t" << id << ENDL;
-			logger(INFO, YELLOW) << "PoW:\t" << proof_of_work << ENDL;
-			logger(INFO, YELLOW) << "Diff:\t" << current_diff << ENDL;
+			logger(INFO, BRIGHT_BLUE) 
+				<< "ALTERNATIVE BLOCK ADDED" 
+				<< ENDL;
+			logger(INFO, BLUE) 
+				<< "ID : Diff = PoW: " 
+				<< id 
+				<< " : " 
+				<< current_diff 
+				<< " = " 
+				<< proof_of_work 
+				<< ENDL;
+			
+			uint64_t h_delta = 0;
+			
+			h_delta = getCurrentBlockchainHeight() - bei.height;
+			
+			if (h_delta > parameters::CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW) 
+				logger(INFO, BRIGHT_RED) 
+					<< "Chain Top - Block Height = Delta " 
+					<< getCurrentBlockchainHeight() 
+					<< " - " 
+					<< bei.height 
+					<< " = " 
+					<< h_delta 
+					<< " !!! AHTUNG BLJAD!!!"
+					<< ENDL;
+			else
+				logger(INFO, BRIGHT_BLUE) 
+					<< "Chain Top - Block Height = Delta "
+					<< getCurrentBlockchainHeight() 
+					<< " - " 
+					<< bei.height 
+					<< " = " 
+					<< h_delta 
+					<< ENDL;	
 
 			if (sendNewAlternativeBlockMessage) 
 			{
@@ -1168,8 +1272,10 @@ bool Blockchain::handle_alternative_block(const Block& b, const Crypto::Hash& id
   } else {
     //block orphaned
     bvc.m_marked_as_orphaned = true;
-    logger(INFO, BRIGHT_RED) <<
-      "Block recognized as orphaned and rejected, id = " << id;
+		logger(INFO, CYAN) 
+			<< "Alternative block "
+			<< id 
+			<< " is rejected since lost the parent";
   }
 
   return true;
@@ -1183,13 +1289,18 @@ bool Blockchain::getBlocks(uint32_t start_offset, uint32_t count, std::list<Bloc
     blocks.push_back(m_blocks[i].bl);
     std::list<Crypto::Hash> missed_ids;
     getTransactions(m_blocks[i].bl.transactionHashes, txs, missed_ids);
-    if (!(!missed_ids.size())) { logger(ERROR, BRIGHT_RED) << "have missed transactions in own block in main blockchain"; return false; }
+		
+		if (!(!missed_ids.size())) { 
+			logger(ERROR, BRIGHT_RED) 
+				<< "have missed transactions in own block in main blockchain"; 
+			return false; 
+		}
   }
 
   return true;
 }
-
 bool Blockchain::getBlocks(uint32_t start_offset, uint32_t count, std::list<Block>& blocks) {
+
   std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
   if (start_offset >= m_blocks.size()) {
     return false;
@@ -1233,8 +1344,8 @@ bool Blockchain::handleGetObjects(NOTIFY_REQUEST_GET_OBJECTS::request& arg, NOTI
 
   return true;
 }
-
 bool Blockchain::getAlternativeBlocks(std::list<Block>& blocks) {
+
   std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
   for (auto& alt_bl : m_alternative_chains) {
     blocks.push_back(alt_bl.second.bl);
@@ -1242,8 +1353,8 @@ bool Blockchain::getAlternativeBlocks(std::list<Block>& blocks) {
 
   return true;
 }
-
 uint32_t Blockchain::getAlternativeBlocksCount() {
+
   std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
   return static_cast<uint32_t>(m_alternative_chains.size());
 }
@@ -2443,8 +2554,8 @@ bool Blockchain::loadBlockchainIndices() {
     m_generatedTransactionsIndex.clear();
 
     for (uint32_t b = 0; b < m_blocks.size(); ++b) {
-      if (b % 1000 == 0) {
-        logger(INFO, BLUE) << "Height " << b << " of " << m_blocks.size();
+      if (b % 10000 == 0) {
+        logger(INFO, BLUE) << "# " << b << " of " << m_blocks.size();
       }
       const BlockEntry& block = m_blocks[b];
       m_timestampIndex.add(block.bl.timestamp, get_block_hash(block.bl));

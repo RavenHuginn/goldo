@@ -39,6 +39,9 @@
 #include "Serialization/BinaryOutputStreamSerializer.h"
 #include "Serialization/SerializationOverloads.h"
 
+#include "Common/ConsoleTools.h"
+#include "zrainbow.h"
+
 using namespace Common;
 using namespace Logging;
 using namespace CryptoNote;
@@ -52,11 +55,12 @@ size_t get_random_index_with_fixed_probability(size_t max_index) {
   size_t x = Crypto::rand<size_t>() % (max_index + 1);
   return (x*x*x) / (max_index*max_index); //parabola \/
 }
-
+///////////////////////////////////////////////////////////////////////////////
 
 void addPortMapping(Logging::LoggerRef& logger, uint32_t port) {
   // Add UPnP port mapping
-  logger(INFO) << "Attempting to add IGD port mapping.";
+	logger(INFO) 
+		<< "Attempting to add IGD port mapping via UPnP.";
   int result;
   UPNPDev* deviceList = upnpDiscover(1000, NULL, NULL, 0, 0, &result);
   UPNPUrls urls;
@@ -68,23 +72,28 @@ void addPortMapping(Logging::LoggerRef& logger, uint32_t port) {
     if (result == 1) {
       std::ostringstream portString;
       portString << port;
-      if (UPNP_AddPortMapping(urls.controlURL, igdData.first.servicetype, portString.str().c_str(),
-        portString.str().c_str(), lanAddress, CryptoNote::CRYPTONOTE_TICKER, "TCP", 0, "0") != 0) {
-        logger(ERROR) << "UPNP_AddPortMapping failed.";
+			
+			if (UPNP_AddPortMapping(urls.controlURL, igdData.first.servicetype, portString.str().c_str(), portString.str().c_str(), lanAddress, CryptoNote::CRYPTONOTE_TICKER, "TCP", 0, "0") != 0) {
+				logger(ERROR) 
+					<< "UPNP_AddPortMapping failed.";
       } else {
         logger(INFO, BRIGHT_GREEN) << "Added IGD port mapping.";
       }
     } else if (result == 2) {
-      logger(INFO) << "IGD was found but reported as not connected.";
+			logger(INFO) 
+				<< "IGD was found but reported as not connected.";
     } else if (result == 3) {
-      logger(INFO) << "UPnP device was found but not recoginzed as IGD.";
+			logger(INFO) 
+				<< "UPnP device was found but not recoginzed as IGD.";
     } else {
-      logger(ERROR) << "UPNP_GetValidIGD returned an unknown result code.";
+			logger(ERROR) 
+				<< "UPNP_GetValidIGD returned an unknown result code.";
     }
 
     FreeUPNPUrls(&urls);
   } else {
-    logger(INFO) << "No IGD was found.";
+		logger(INFO) 
+			<< "No IGD was found.";
   }
 }
 
@@ -116,7 +125,13 @@ namespace CryptoNote
       std::stringstream ss;
       ss << std::setfill('0') << std::setw(8) << std::hex << std::noshowbase;
       for (const auto& pe : pl) {
-        ss << pe.id << "\t\t" << pe.adr << " \tlast_seen: " << Common::timeIntervalToString(now_time - pe.last_seen) << std::endl;
+			ss 
+				<< pe.id 
+				<< "\t" 
+				<< pe.adr 
+				<< " \tseen: " 
+				<< Common::timeIntervalToString(now_time - pe.last_seen) 
+				<< std::endl;
       }
       return ss.str();
     }
@@ -623,7 +638,7 @@ namespace CryptoNote
     }
 
     if (!handle_remote_peerlist(rsp.local_peerlist, rsp.local_time, context)) {
-      logger(Logging::ERROR) << context << "COMMAND_TIMED_SYNC: failed to handle_remote_peerlist(...), closing connection.";
+		logger(Logging::TRACE) << context << "COMMAND_TIMED_SYNC: failed to handle_remote_peerlist(...), closing connection.";
       return false;
     }
 
@@ -919,16 +934,14 @@ namespace CryptoNote
     {
       if(be.last_seen > uint64_t(local_time))
       {
-        logger(ERROR) << "FOUND FUTURE peerlist for entry " << be.adr << " last_seen: " << be.last_seen << ", local_time(on remote node):" << local_time;
+			logger(TRACE) << "FOUND FUTURE peerlist for entry " << be.adr << " last_seen: " << be.last_seen << ", local_time(on remote node):" << local_time;
         return false;
       }
       be.last_seen += delta;
     }
     return true;
   }
-
-  //-----------------------------------------------------------------------------------
- 
+///////////////////////////////////////////////////////////////////////////////
   bool NodeServer::handle_remote_peerlist(const std::list<PeerlistEntry>& peerlist, time_t local_time, const CryptoNoteConnectionContext& context)
   {
     int64_t delta = 0;
@@ -1130,7 +1143,7 @@ namespace CryptoNote
     context.version = arg.node_data.version;
 
     if (arg.node_data.network_id != m_network_id) {
-      logger(Logging::INFO) << context << "WRONG NETWORK AGENT CONNECTED! id=" << arg.node_data.network_id;
+      logger(Logging::DEBUGGING) << context << "WRONG NETWORK AGENT CONNECTED! id=" << arg.node_data.network_id;
       context.m_state = CryptoNoteConnectionContext::state_shutdown;
       return 1;
     }
@@ -1196,40 +1209,88 @@ namespace CryptoNote
     std::list<PeerlistEntry> pl_wite;
     std::list<PeerlistEntry> pl_gray;
     m_peerlist.get_peerlist_full(pl_gray, pl_wite);
-    logger(INFO,BRIGHT_GREEN)  << "Peerlist white:" << ENDL << print_peerlist_to_string(pl_wite);
-    logger(INFO,BRIGHT_YELLOW) << "Peerlist gray:" << ENDL << print_peerlist_to_string(pl_gray);
+	
+    std::cout
+		<< ENDL 
+		<< green
+		<< "Peerlist white:" 
+		<< grey
+		<< ENDL 
+		<< print_peerlist_to_string(pl_wite)
+		<< ENDL;
+		
+    std::cout
+		<< ENDL 
+		<< khaki
+		<< "Peerlist gray:" 
+		<< grey
+		<< ENDL 
+		<< print_peerlist_to_string(pl_gray)
+		<< ENDL;
+
     return true;
   }
-  //-----------------------------------------------------------------------------------
+///////////////////////////////////////////////////////////////////////////////
+bool NodeServer::log_alive(){
+	std::list<PeerlistEntry> pl_wite;
+	std::list<PeerlistEntry> pl_gray;
   
+	m_peerlist.get_peerlist_full(pl_gray, pl_wite);
+	
+    std::cout
+		<< ENDL 
+		<< lime
+		<< "Active peers:" 
+		<< ENDL 
+		<< green
+		<< ENDL 
+		<< print_peerlist_to_string(pl_wite)
+		<< grey
+		<< ENDL;
+	return true;
+}
+///////////////////////////////////////////////////////////////////////////////
   bool NodeServer::log_connections() {
-    logger(INFO) << "Connections: \r\n" << print_connections_container() ;
+    std::cout
+		<< ENDL 
+		<< lime
+		<< "Connections:" 
+		<< ENDL 
+		<< green
+		<< ENDL 
+		<< print_connections_container()
+		<< grey
+		<< ENDL;
+
     return true;
   }
-  //-----------------------------------------------------------------------------------
-  
+///////////////////////////////////////////////////////////////////////////////
   std::string NodeServer::print_connections_container() {
 
     std::stringstream ss;
 
     for (const auto& cntxt : m_connections) {
-      ss << Common::ipAddressToString(cntxt.second.m_remote_ip) << ":" << cntxt.second.m_remote_port
-        << " \t\tpeer_id " << cntxt.second.peerId
-        << " \t\tconn_id " << cntxt.second.m_connection_id << (cntxt.second.m_is_income ? " INC" : " OUT")
+		ss 
+			<< Common::ipAddressToString(cntxt.second.m_remote_ip) 
+			<< ":" 
+			<< cntxt.second.m_remote_port
+			<< " \t\tpeer_id " 
+			<< cntxt.second.peerId
+			<< " \t\tconn_id " 
+			<< cntxt.second.m_connection_id 
+			<< (cntxt.second.m_is_income ? " INC" : " OUT")
         << std::endl;
     }
 
     return ss.str();
   }
-  //-----------------------------------------------------------------------------------
-  
+///////////////////////////////////////////////////////////////////////////////
   void NodeServer::on_connection_new(P2pConnectionContext& context)
   {
     logger(TRACE) << context << "NEW CONNECTION";
     m_payload_handler.onConnectionOpened(context);
   }
-  //-----------------------------------------------------------------------------------
-  
+///////////////////////////////////////////////////////////////////////////////
   void NodeServer::on_connection_close(P2pConnectionContext& context)
   {
     logger(TRACE) << context << "CLOSE CONNECTION";
@@ -1292,7 +1353,7 @@ namespace CryptoNote
         logger(DEBUGGING) << "acceptLoop() is interrupted";
         break;
       } catch (const std::exception& e) {
-        logger(WARNING) << "Exception in acceptLoop: " << e.what();
+        logger(DEBUGGING) << "Exception in acceptLoop: " << e.what();
       }
     }
 
@@ -1311,7 +1372,7 @@ namespace CryptoNote
     } catch (System::InterruptedException&) {
       logger(DEBUGGING) << "onIdle() is interrupted";
     } catch (std::exception& e) {
-      logger(WARNING) << "Exception in onIdle: " << e.what();
+      logger(DEBUGGING) << "Exception in onIdle: " << e.what();
     }
 
     logger(DEBUGGING) << "onIdle finished";
@@ -1326,7 +1387,7 @@ namespace CryptoNote
         for (auto& kv : m_connections) {
           auto& ctx = kv.second;
           if (ctx.writeDuration(now) > P2P_DEFAULT_INVOKE_TIMEOUT) {
-            logger(WARNING) << ctx << "write operation timed out, stopping connection";
+            logger(DEBUGGING) << ctx << "write operation timed out, stopping connection";
             ctx.interrupt();
           }
         }
@@ -1334,7 +1395,7 @@ namespace CryptoNote
     } catch (System::InterruptedException&) {
       logger(DEBUGGING) << "timeoutLoop() is interrupted";
     } catch (std::exception& e) {
-      logger(WARNING) << "Exception in timeoutLoop: " << e.what();
+      logger(DEBUGGING) << "Exception in timeoutLoop: " << e.what();
     }
   }
 
@@ -1347,7 +1408,7 @@ namespace CryptoNote
     } catch (System::InterruptedException&) {
       logger(DEBUGGING) << "timedSyncLoop() is interrupted";
     } catch (std::exception& e) {
-      logger(WARNING) << "Exception in timedSyncLoop: " << e.what();
+      logger(DEBUGGING) << "Exception in timedSyncLoop: " << e.what();
     }
 
     logger(DEBUGGING) << "timedSyncLoop finished";
@@ -1451,7 +1512,7 @@ namespace CryptoNote
       // connection stopped
       logger(DEBUGGING) << ctx << "writeHandler() is interrupted";
     } catch (std::exception& e) {
-      logger(WARNING) << ctx << "error during write: " << e.what();
+      logger(DEBUGGING) << ctx << "error during write: " << e.what();
       ctx.interrupt(); // stop connection on write error
     }
 

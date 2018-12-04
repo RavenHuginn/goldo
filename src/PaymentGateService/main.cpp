@@ -3,6 +3,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "rulez.h"
+
 #include <iostream>
 #include <memory>
 #include <thread>
@@ -24,7 +26,8 @@
 #include <errno.h>
 #endif
 
-#define SERVICE_NAME "Payment Gate"
+std::string SERVICE_NAME_STR = std::string(CRYPTONOTE_ASSET_NAME)+" Payments Gate";
+const char * SERVICE_NAME = SERVICE_NAME_STR.c_str();;
 
 PaymentGateService* ppg;
 

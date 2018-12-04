@@ -2,15 +2,18 @@
 // Copyright (c) 2014-2017 XDN-project developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-// GOLDO
+
+#include "rulez.h"
+
 #pragma once
 
 #include <cstdint>
 #include <initializer_list>
 
-namespace CryptoNote {
-namespace parameters {
-
+namespace CryptoNote 
+{
+	namespace parameters 
+	{
 const uint64_t CRYPTONOTE_MAX_BLOCK_NUMBER                   = 500000000;
 const size_t   CRYPTONOTE_MAX_BLOCK_BLOB_SIZE                = 500000000;
 const size_t   CRYPTONOTE_MAX_TX_SIZE                        = 1000000000;
@@ -104,8 +107,9 @@ const uint64_t START_BLOCK_REWARD                            = (UINT64_C(320000)
 const uint64_t MIN_BLOCK_REWARD                              = (UINT64_C(150) * parameters::COIN);
 const uint64_t REWARD_HALVING_INTERVAL                       = (UINT64_C(11000));
 
-const char     CRYPTONOTE_TICKER[]                           = "goldo";
-const char     CRYPTONOTE_NAME[]                             = "Goldo";
+	const char     CRYPTONOTE_TICKER[]                           = CRYPTONOTE_ASSET_TICKER;
+	const char     CRYPTONOTE_NAME[]                             = CRYPTONOTE_ASSET_NAME;
+	const char     CRYPTONOTE_APP[]                              = CRYPTONOTE_ASSET_APP;
 
 const char GENESIS_COINBASE_TX_HEX[] = "010101ff00002101f0c11cb027ca12cb2b52d82bbe1851432ca1aabc5362375cddfb1c9606a8d135";
 
@@ -205,6 +209,20 @@ const std::initializer_list<CheckpointData> CHECKPOINTS = {
 	{ 717969,   "52f7aead5f5d924ff7c262a630c635b93b0c97a980700c1e22d6113d8c0d1625" },
 	{ 725000,   "3de2a571a4c53ec9b47731399b98442c20d5f8f04902990b1e551ad8b4f932b9" },
 	{ 750000,   "1b42efa22e47ce8980f33cdbc8a1ab823b3377bd261e2aa10e448f78d082cba3" },
+	{ 800000,   "078165a176629ded6c6ec1a2380b5a3d1ec2f60ef9b45980335825ac9179996a" },
+	{ 850000,   "ca9ad5877f83020aa8945cba3d81d257c3ca203c32f5f90d240a42e3aed6eeb0" },
+	{ 900000,   "12a03d0bf7879e0f491647e464ead584f4b3d5f65f4c398f78ce14f552c10a6c" },
+	{ 950000,   "4c6eedc9067360da0abaf1959f0d4d7ec6eacb3c3134083ba6b3879acb570ef8" },
+	{ 1000000,   "1447c003ce44724e9e1fcdfc3c2ccbf2c8d1f38fe6a8452c419803e8c77aec56" },
+	{ 1100000,   "51cd60e7a9b765d992caf5c4d916564052c9d9db32ed7e35260c1f1341a54060" },
+	{ 1200000,   "6f3d5227be92a662bbba5e44f48e212a00f211eccc2644629282c15802435601" },
+	{ 1300000,   "c9b78ac62a94e7197ba554bbe9b9e4e2ac47801f9a5710572e76996208b520fe" },
+	{ 1400000,   "9fe52803228278368f2c9b1298f255047892396c3848a0168c90fe1ff46fc28b" },
+	{ 1500000,   "96d7fd719205ad86803463bc552c7dcd94aeb170cf04e28b103b995cf6cdd028" },
+	{ 1600000,   "362c845eb58e6e2cc2db3d4e6c96edf62561f2aa1bc32b99bd6dd02c064c780e" },
+	{ 1700000,   "941a43491dd4f0831b62957f857b5ed613b17434c2c10918d78dc01c1598c5e4" },
+	{ 1719567,   "271b7aa866cd85f04aa8090043975177a0499a1170d42d14d05472ec39f0646f" },
+	
 
 };
 

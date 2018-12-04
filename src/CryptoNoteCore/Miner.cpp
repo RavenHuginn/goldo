@@ -133,8 +133,7 @@ namespace CryptoNote
   }
 
   //-----------------------------------------------------------------------------------------------------
-  void miner::merge_hr()
-  {
+void miner::merge_hr(){
     if(m_last_hr_merge_time && is_mining()) {
       m_current_hash_rate = m_hashes * 1000 / (millisecondsSinceEpoch() - m_last_hr_merge_time + 1);
       std::lock_guard<std::mutex> lk(m_last_hash_rates_lock);
@@ -152,7 +151,7 @@ namespace CryptoNote
     m_last_hr_merge_time = millisecondsSinceEpoch();
     m_hashes = 0;
   }
-
+//-----------------------------------------------------------------------------------------------------
   bool miner::init(const MinerConfig& config) {
     if (!config.extraMessages.empty()) {
       std::string buff;
@@ -352,7 +351,8 @@ namespace CryptoNote
   //-----------------------------------------------------------------------------------------------------
   bool miner::worker_thread(uint32_t th_local_index)
   {
-    logger(INFO) << "Miner thread was started ["<< th_local_index << "]";
+    logger(INFO,MAGENTA) << "Miner thread was started ["<< th_local_index << "]";
+
     uint32_t nonce = m_starter_nonce + th_local_index;
     difficulty_type local_diff = 0;
     uint32_t local_template_ver = 0;
@@ -396,7 +396,7 @@ namespace CryptoNote
         //we lucky!
         ++m_config.current_extra_message_index;
 
-        logger(INFO, BRIGHT_MAGENTA) << ";-) Found block for difficulty: " << local_diff;
+        logger(INFO, BRIGHT_MAGENTA) << "Found block for difficulty: " << local_diff;
 
         if(!m_handler.handle_block_found(b)) {
           --m_config.current_extra_message_index;
@@ -409,7 +409,7 @@ namespace CryptoNote
       nonce += m_threads_total;
       ++m_hashes;
     }
-    logger(INFO) << "Miner thread stopped ["<< th_local_index << "]";
+    logger(INFO,MAGENTA) << "Miner thread stopped ["<< th_local_index << "]";
     return true;
   }
   //-----------------------------------------------------------------------------------------------------

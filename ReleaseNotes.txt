@@ -1,4 +1,20 @@
 Oxygen version:
+ Build #52
+  - internal build - code refactoring;
+ Build #51
+  - wallet: highlight debit amounts not less than 1.00;
+ Build #50
+  - daemon: alive command prints alive peers list;
+  - daemon: connects command refined;
+  - daemon: peers command refined;
+ Build #49
+  - core: alternative blocks age limitation;
+ Build #48
+  - payment service: minor improvements;
+ Build #47
+  - wallet: read-olny wallets;
+ Build #46
+  - auxiliary: critical checkpoins;
  Build #45
   - core: Initial fork from Soldo;
 

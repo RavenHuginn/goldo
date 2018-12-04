@@ -17,6 +17,9 @@
 #include "CryptoNoteCore/VerificationContext.h"
 #include "P2p/LevinProtocol.h"
 
+#include "Common/ConsoleTools.h"
+#include "zrainbow.h"
+
 using namespace Logging;
 using namespace Common;
 
@@ -111,25 +114,62 @@ bool CryptoNoteProtocolHandler::start_sync(CryptoNoteConnectionContext& context)
 bool CryptoNoteProtocolHandler::get_stat_info(core_stat_info& stat_inf) {
   return m_core.get_stat_info(stat_inf);
 }
-
 void CryptoNoteProtocolHandler::log_connections() {
+
   std::stringstream ss;
 
-  ss << std::setw(25) << std::left << "Remote Host"
-    << std::setw(20) << "Peer id"
-    << std::setw(25) << "Recv/Sent (inactive,sec)"
-    << std::setw(25) << "State"
-    << std::setw(20) << "Lifetime(seconds)" << ENDL;
+    std::cout
+		<< ENDL 
+		<< yellow
+		<< "Connections:" 
+		<< ENDL 
+		<< ENDL; 
+		
+	std::cout 
+		<< white
+		<< "InOut\t"
+		<< "Remote Host\t\t"
+		<< "Peer id\t\t\t"
+		<< "Alive, s\t" 
+		<< "Height\t\t" 
+		<< "State\t\t"
+		//<< "Recv/Sent (inactive, s)\t"
+		<< ENDL
+		<< grey
+		<< ENDL;
 
   m_p2p->for_each_connection([&](const CryptoNoteConnectionContext& cntxt, PeerIdType peer_id) {
-    ss << std::setw(32) << std::left << std::string(cntxt.m_is_income ? "[INC]" : "[OUT]") +
-      Common::ipAddressToString(cntxt.m_remote_ip) + ":" + std::to_string(cntxt.m_remote_port)
-      << std::setw(20) << std::hex << peer_id
-      // << std::setw(25) << std::to_string(cntxt.m_recv_cnt) + "(" + std::to_string(time(NULL) - cntxt.m_last_recv) + ")" + "/" + std::to_string(cntxt.m_send_cnt) + "(" + std::to_string(time(NULL) - cntxt.m_last_send) + ")"
-      << std::setw(25) << get_protocol_state_string(cntxt.m_state)
-      << std::setw(20) << std::to_string(time(NULL) - cntxt.m_started) << ENDL;
+		std::cout 
+			<< (cntxt.m_is_income ? teal : khaki )
+			<< std::string(cntxt.m_is_income ? "[INC]\t" : "[OUT]\t") 
+			<< Common::ipAddressToString(cntxt.m_remote_ip)
+			<< ":" + std::to_string(cntxt.m_remote_port)
+			<< "\t"
+			<< peer_id
+			<< "\t"
+			<< std::to_string(time(NULL) - cntxt.m_started) 
+			<< "\t\t"
+			<< std::to_string(cntxt.m_remote_blockchain_height) 
+			<< "\t\t"
+			<< get_protocol_state_string(cntxt.m_state)
+/*
+<< std::to_string(cntxt.m_recv_cnt) 
+<< "(" 
+<< std::to_string(time(NULL) - cntxt.m_last_recv) 
+<< ")" 
+<< "/" 
+<< std::to_string(cntxt.m_send_cnt) 
+<< "(" 
+<< std::to_string(time(NULL) - cntxt.m_last_send) 
+<< ")"
+*/
+			<< ENDL;
+		
   });
-  logger(INFO) << "Connections: " << ENDL << ss.str();
+	
+    std::cout
+		<< grey
+		<< ENDL; 
 }
 
 uint32_t CryptoNoteProtocolHandler::get_current_blockchain_height() {
@@ -154,7 +194,7 @@ bool CryptoNoteProtocolHandler::process_payload_sync_data(const CORE_SYNC_DATA& 
   } else {
     int64_t diff = static_cast<int64_t>(hshd.current_height) - static_cast<int64_t>(get_current_blockchain_height());
 
-    logger(diff >= 0 ? (is_inital ? Logging::INFO : Logging::DEBUGGING) : Logging::TRACE, Logging::BRIGHT_YELLOW) << context <<
+    logger(diff >= 0 ? (is_inital ? Logging::INFO : Logging::DEBUGGING) : Logging::TRACE, Logging::YELLOW) << context <<
       "Sync data returned unknown top block: " << get_current_blockchain_height() << " -> " << hshd.current_height
       << " [" << std::abs(diff) << " blocks (" << std::abs(diff) / (24 * 60 * 60 / m_currency.difficultyTarget()) << " days) "
       << (diff >= 0 ? std::string("behind") : std::string("ahead")) << "] " << std::endl << "SYNCHRONIZATION started";
@@ -407,8 +447,10 @@ int CryptoNoteProtocolHandler::processObjects(CryptoNoteConnectionContext& conte
       tx_verification_context tvc = boost::value_initialized<decltype(tvc)>();
       m_core.handle_incoming_tx(asBinaryArray(tx_blob), tvc, true);
       if (tvc.m_verifivation_failed) {
-        logger(Logging::ERROR) << context << "transaction verification failed on NOTIFY_RESPONSE_GET_OBJECTS, \r\ntx_id = "
+		  
+        logger(Logging::ERROR, RED) << context << "transaction verification failed on NOTIFY_RESPONSE_GET_OBJECTS, \r\ntx_id = "
           << Common::podToHex(getBinaryArrayHash(asBinaryArray(tx_blob))) << ", dropping connection";
+
         context.m_state = CryptoNoteConnectionContext::state_shutdown;
         return 1;
       }
@@ -510,33 +552,40 @@ bool CryptoNoteProtocolHandler::request_missing_objects(CryptoNoteConnectionCont
     requestMissingPoolTransactions(context);
 
     context.m_state = CryptoNoteConnectionContext::state_normal;
-    logger(Logging::INFO, Logging::BRIGHT_GREEN) << context << "SYNCHRONIZED OK";
+    logger(Logging::INFO, Logging::GREEN) << context << "SYNCHRONIZED OK";
     on_connection_synchronized();
   }
   return true;
 }
-
+///////////////////////////////////////////////////////////////////////////////
 bool CryptoNoteProtocolHandler::on_connection_synchronized() {
-  bool val_expected = false;
-  if (m_synchronized.compare_exchange_strong(val_expected, true)) {
-    logger(Logging::INFO) << ENDL << "**********************************************************************" << ENDL
-      << "You are now synchronized with the network. You may now start simplewallet." << ENDL
-      << ENDL
-      << "Please note, that the blockchain will be saved only after you quit the daemon with \"exit\" command or if you use \"save\" command." << ENDL
-      << "Otherwise, you will possibly need to synchronize the blockchain again." << ENDL
-      << ENDL
-      << "Use \"help\" command to see the list of available commands." << ENDL
-      << "**********************************************************************";
-    m_core.on_synchronized();
+	
+	bool val_expected = false;
+	
+	if (m_synchronized.compare_exchange_strong(val_expected, true)) {
+		
+		logger(Logging::INFO, Logging::BRIGHT_YELLOW)<< "----------------------------------------------------------------------" << ENDL;
+		logger(Logging::INFO, Logging::BRIGHT_YELLOW)<< "Daemon is synchronized with the network now." << ENDL;                  
+		logger(Logging::INFO, Logging::BRIGHT_YELLOW)<< "You may start the wallet app." << ENDL;                                 
+		logger(Logging::INFO, Logging::BRIGHT_YELLOW)<< ENDL;                                                                    
+		logger(Logging::INFO, Logging::BRIGHT_YELLOW)<< "Quit the daemon with \"exit\" command." << ENDL;                        
+		logger(Logging::INFO, Logging::BRIGHT_YELLOW)<< "Use \"save\" command to save blockchain." << ENDL;                      
+		logger(Logging::INFO, Logging::BRIGHT_YELLOW)<< "Otherwise, you will need to synchronize the blockchain again." << ENDL;
+		logger(Logging::INFO, Logging::BRIGHT_YELLOW)<< ENDL;
+		logger(Logging::INFO, Logging::BRIGHT_YELLOW)<< "Use \"help\" command to see the list of available commands." << ENDL;
+		logger(Logging::INFO, Logging::BRIGHT_YELLOW)<< "----------------------------------------------------------------------";
 
-    uint32_t height;
-    Crypto::Hash hash;
-    m_core.get_blockchain_top(height, hash);
-    m_observerManager.notify(&ICryptoNoteProtocolObserver::blockchainSynchronized, height);
-  }
-  return true;
-}
+		m_core.on_synchronized();                                                      
 
+		uint32_t height;                                                               
+		Crypto::Hash hash;                                                             
+		m_core.get_blockchain_top(height, hash);                                       
+		m_observerManager.notify(&ICryptoNoteProtocolObserver::blockchainSynchronized, height);
+	} 
+	
+	return true;                                                                     
+}                                                                                  
+///////////////////////////////////////////////////////////////////////////////
 int CryptoNoteProtocolHandler::handle_response_chain_entry(int command, NOTIFY_RESPONSE_CHAIN_ENTRY::request& arg, CryptoNoteConnectionContext& context) {
   logger(Logging::TRACE) << context << "NOTIFY_RESPONSE_CHAIN_ENTRY: m_block_ids.size()=" << arg.m_block_ids.size()
     << ", m_start_height=" << arg.start_height << ", m_total_height=" << arg.total_height;

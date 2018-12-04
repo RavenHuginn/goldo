@@ -4,6 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "PaymentServiceConfiguration.h"
+#include "CryptoNoteConfig.h"
 
 #include <iostream>
 #include <algorithm>
@@ -20,7 +21,7 @@ Configuration::Configuration() {
   daemonize = false;
   registerService = false;
   unregisterService = false;
-  logFile = "payment_gate.log";
+  logFile = std::string(CryptoNote::CRYPTONOTE_TICKER)+std::string("p.log");
   testnet = false;
   printAddresses = false;
   logLevel = Logging::INFO;

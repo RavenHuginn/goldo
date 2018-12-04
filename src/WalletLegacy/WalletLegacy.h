@@ -55,6 +55,13 @@ public:
 		bool is_deterministic
 	) override;
 	
+	virtual void RestoreReadOnly
+	(
+		const std::string& password, 
+		const CryptoNote::AccountPublicAddress& address, 
+		const Crypto::SecretKey& viewkey
+	) override;
+	
   virtual void initAndLoad(std::istream& source, const std::string& password) override;
   virtual void initWithKeys(const AccountKeys& accountKeys, const std::string& password) override;
   virtual void shutdown() override;
