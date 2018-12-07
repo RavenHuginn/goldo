@@ -404,6 +404,7 @@ std::string tryToOpenWalletOrLoadKeysOrThrow(LoggerRef& logger, std::unique_ptr<
 }
 ////////////////////////////////////////////////////////////////////////////////
 // simple local routines below
+////////////////////////////////////////////////////////////////////////////////
 std::string makeCenteredString(size_t width, const std::string& text) {
   if (text.size() >= width) {
     return text;
@@ -412,6 +413,21 @@ std::string makeCenteredString(size_t width, const std::string& text) {
   size_t offset = (width - text.size() + 1) / 2;
   return std::string(offset, ' ') + text + std::string(width - text.size() - offset, ' ');
 }
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 const size_t TIMESTAMP_MAX_WIDTH = 19;
 const size_t HASH_MAX_WIDTH = 64;
@@ -883,7 +899,7 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm)
 		{
 		  m_generate_new = userInput;
 		}
-	else 
+	else // open existing wallet
 		{
 		  m_wallet_file_arg = userInput;
 		}
@@ -914,59 +930,63 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm)
 		m_restore_keys = 0;
 		m_restore_legacy = 0;
 		m_restore_ro = 1;
+	}			
   }
+
+	if (!m_generate_new.empty() && !m_wallet_file_arg.empty()) {
+		fail_msg_writer() << "you can't specify 'generate-new-wallet' and 'wallet-file' arguments simultaneously";
+		return false;
 	}
 
-  if (!m_generate_new.empty() && !m_wallet_file_arg.empty()) {
-		fail_msg_writer() << "you can't specify 'generate-new-wallet' and 'wallet-file' arguments simultaneously";
-    return false;
-  }
-
-  std::string walletFileName;
-  if (!m_generate_new.empty()) {
-    std::string ignoredString;
-    WalletHelper::prepareFileNames(m_generate_new, ignoredString, walletFileName);
-    boost::system::error_code ignore;
-    if (boost::filesystem::exists(walletFileName, ignore)) {
-      fail_msg_writer() << walletFileName << " already exists";
-      return false;
-    }
-  }
+	std::string walletFileName;
+  
+	if (!m_generate_new.empty()) {
+		std::string ignoredString;
+		WalletHelper::prepareFileNames(m_generate_new, ignoredString, walletFileName);
+		boost::system::error_code ignore;
+		
+		if (boost::filesystem::exists(walletFileName, ignore)) {
+			fail_msg_writer() << walletFileName << " already exists";
+			return false;
+		}
+	}
 
 	if (m_daemon_host.empty()) m_daemon_host = "localhost";
 	if (!m_daemon_port) m_daemon_port = RPC_DEFAULT_PORT;
+
+	if (!m_daemon_address.empty()) {
+		if (!parseUrlAddress(m_daemon_address, m_daemon_host, m_daemon_port)) {
+			fail_msg_writer() << "failed to parse daemon address: " << m_daemon_address;
+			return false;
+		}
+	} else {
+		m_daemon_address = std::string("http://") + m_daemon_host + ":" + std::to_string(m_daemon_port);
+	}
+
+	Tools::PasswordContainer pwd_container;
   
-  if (!m_daemon_address.empty()) {
-    if (!parseUrlAddress(m_daemon_address, m_daemon_host, m_daemon_port)) {
-      fail_msg_writer() << "failed to parse daemon address: " << m_daemon_address;
-      return false;
-    }
-  } else {
-    m_daemon_address = std::string("http://") + m_daemon_host + ":" + std::to_string(m_daemon_port);
-  }
+	if (command_line::has_arg(vm, arg_password)) {
+		pwd_container.password(command_line::get_arg(vm, arg_password));
+	} else if (!pwd_container.read_password()) {
+		fail_msg_writer() << "failed to read wallet password";
+		return false;
+	}
 
-  Tools::PasswordContainer pwd_container;
-  if (command_line::has_arg(vm, arg_password)) {
-    pwd_container.password(command_line::get_arg(vm, arg_password));
-  } else if (!pwd_container.read_password()) {
-    fail_msg_writer() << "failed to read wallet password";
-    return false;
-  }
+	this->m_node.reset(new NodeRpcProxy(m_daemon_host, m_daemon_port));
 
-  this->m_node.reset(new NodeRpcProxy(m_daemon_host, m_daemon_port));
+	std::promise<std::error_code> errorPromise;
+	std::future<std::error_code> f_error = errorPromise.get_future();
+	auto callback = [&errorPromise](std::error_code e) {errorPromise.set_value(e); };
 
-  std::promise<std::error_code> errorPromise;
-  std::future<std::error_code> f_error = errorPromise.get_future();
-  auto callback = [&errorPromise](std::error_code e) {errorPromise.set_value(e); };
-
-  m_node->addObserver(static_cast<INodeRpcProxyObserver*>(this));
-  m_node->init(callback);
-  auto error = f_error.get();
-  if (error) {
-    fail_msg_writer() << "failed to init NodeRPCProxy: " << error.message();
-    return false;
-  }
-
+	m_node->addObserver(static_cast<INodeRpcProxyObserver*>(this));
+	m_node->init(callback);
+	auto error = f_error.get();
+	
+	if (error) {
+		fail_msg_writer() << "failed to init NodeRPCProxy: " << error.message();
+		return false;
+	}
+	
 	if (m_restore_ro)
 	{
 		std::cout << std::endl << khaki << "Trying to restore read-only wallet" << std::endl << grey;
@@ -974,189 +994,188 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm)
 		return create_read_only_wallet(walletFileName,pwd_container.password());						
 	}
 	
-  if (!m_generate_new.empty() || m_restore_seed || m_restore_keys || m_restore_legacy ) // generate or resrore mode ----------------
-  {
-    std::string walletBackupFile = prepareWalletBackupFilename(m_generate_new);
-    boost::system::error_code ignore;
-	
-    if (boost::filesystem::exists(walletBackupFile, ignore)) {
-      logger(ERROR, BRIGHT_RED) << "Backup file already exists: " + walletBackupFile;
-      return false;
-    }
+	if (!m_generate_new.empty() || m_restore_seed || m_restore_keys || m_restore_legacy) // generate or restore mode ----------------
+	{
+		std::string walletBackupFile = prepareWalletBackupFilename(m_generate_new);
+		boost::system::error_code ignore;
+		
+		if (boost::filesystem::exists(walletBackupFile, ignore)) {
+		  logger(ERROR, BRIGHT_RED) << "Backup file already exists: " + walletBackupFile;
+		  return false;
+		}
 // prep to restore here ____________________________________________________________________________________________________________
-    if (m_restore_seed) //seed restore
-    {
-		m_is_recovery_mode = 1;
-		if (m_classic) //check 2-rand .........................................
+		if (m_restore_seed) //seed restore
 		{
-			std::cout 
-				<< maroon << "Cannot restore seed in CLASSIC wallet mode." << std::endl 
-				<< khaki << "--classic parameter will be ignored." << std::endl << grey;
-			
-			m_classic = 0;
-		}
-
-		if (m_seed.empty()) // chk empty seed and enter it ......................
-		{
-			std::cout << teal << "Enter mnemonic seed:" << std::endl << magenta;
-			std::getline(std::cin, m_seed);
-			std::cout << grey;
-			boost::algorithm::trim(m_seed);
-			
-			if (m_seed.empty())
+			m_is_recovery_mode = 1;
+			if (m_classic) //check 2-rand .........................................
 			{
-				fail_msg_writer() << "set a recovery seed parameter with the --seed=\"words list here\"";
-				return false;
-			}
-		}
-//		std::cout << blue << "Seed: " << m_seed << std::endl;
-		
-		if (!Crypto::ElectrumWords::words_to_bytes(m_seed, m_spend_secret_key)) // chk seed :::::::::
-		{
-			fail_msg_writer() << "seed word list failed verification";
-			return false;
-		}
-    }
-	
-    if (m_restore_keys) //keys restore
-    {
-		m_is_recovery_mode = 1;
-		m_classic = 0; //always restore secondary key
-		m_is_copy = 1;
-		if (m_spend_key.empty()) // chk empty Private Spend key and enter it ......................
-		{
-			std::cout << teal << "Enter Private Spend Key:" << std::endl << magenta;
-			std::getline(std::cin, m_spend_key);
-			std::cout << grey;
-			boost::algorithm::trim(m_spend_key);
-			
-			if (m_spend_key.empty())
-			{
-				fail_msg_writer() << "set a Private Spend key parameter with the --spend-key=\"hexadecimal_key\"";
-				return false;
-			}
-		}
-		
-		if (m_view_key.empty()) // chk empty Private View key and enter it ......................
-		{
-			std::cout << teal << "Enter Private View Key:" << std::endl << magenta;
-			std::getline(std::cin, m_view_key);
-			std::cout << grey;
-			boost::algorithm::trim(m_view_key);
-			
-			if (m_view_key.empty())
-			{
-				fail_msg_writer() << "set a Private View key parameter with the --viev-key=hexadecimal_key";
-				return false;
-			}
-		}
+				std::cout 
+					<< maroon << "Cannot restore seed in CLASSIC wallet mode." << std::endl 
+					<< khaki << "--classic parameter will be ignored." << std::endl << grey;
 				
-		if (!Common::podFromHex(m_spend_key,m_spend_secret_key.data))
-		{
-			fail_msg_writer() << "Private Spend Key failed";
-			return false;
-		}
-		
-		if (!Common::podFromHex(m_view_key,m_view_secret_key.data))
-		{
-			fail_msg_writer() << "Private View Key failed";
-			return false;
-		}
-		
-		if (!Crypto::check_skey(m_spend_secret_key)) // chk Private Spend key :::::::::
-		{
-			fail_msg_writer() << "Private Spend Key is invalid";
-			return false;
-		}
-		
-		if (!Crypto::check_skey(m_view_secret_key)) // chk View Spend key :::::::::
-		{
-			fail_msg_writer() << "Private View Key is invalid";
-			return false;
-		}		
-    }
-   
-if (m_restore_legacy) //legacy restore
-    {
-		m_is_recovery_mode = 1;
-		m_classic = 0; //always restore secondary key
-		m_is_copy = 1;
-		if (m_legacy_key.empty()) // chk empty seed and enter it ......................
-		{
-			std::cout << teal << "Enter Legacy Recovery Key:" << std::endl << magenta;
-			std::getline(std::cin, m_legacy_key);
-			std::cout << grey;
-			boost::algorithm::trim(m_legacy_key);
-			
-			if (m_legacy_key.empty())
+				m_classic = 0;
+			}
+
+			if (m_seed.empty()) // chk empty seed and enter it ......................
 			{
-				fail_msg_writer() << "set a Legacy Recovery Key parameter with the --legacy-key=legacy_key";
+				std::cout << teal << "Enter mnemonic seed:" << std::endl << magenta;
+				std::getline(std::cin, m_seed);
+				std::cout << grey;
+				boost::algorithm::trim(m_seed);
+				
+				if (m_seed.empty())
+				{
+					fail_msg_writer() << "set a recovery seed parameter with the --seed=\"words list here\"";
+					return false;
+				}
+			}
+			
+			if (!Crypto::ElectrumWords::words_to_bytes(m_seed, m_spend_secret_key)) // chk seed :::::::::
+			{
+				fail_msg_writer() << "seed word list failed verification";
 				return false;
 			}
 		}
 		
-		if (!m_legacy_key.empty())
+		if (m_restore_keys) //keys restore
 		{
-
-			uint64_t addressPrefix;
-			std::string data;
-			CryptoNote::AccountKeys keys;
-			
-			addressPrefix = parameters::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX;
-
-			if (!Tools::Base58::decode_addr(m_legacy_key, addressPrefix, data))
+			m_is_recovery_mode = 1;
+			m_classic = 0; //always restore secondary key
+			m_is_copy = 1;
+			if (m_spend_key.empty()) // chk empty Private Spend key and enter it ......................
 			{
-				fail_msg_writer() << "can't decode key from Base58";
+				std::cout << teal << "Enter Private Spend Key:" << std::endl << magenta;
+				std::getline(std::cin, m_spend_key);
+				std::cout << grey;
+				boost::algorithm::trim(m_spend_key);
+				
+				if (m_spend_key.empty())
+				{
+					fail_msg_writer() << "set a Private Spend key parameter with the --spend-key=\"hexadecimal_key\"";
+					return false;
+				}
+			}
+			
+			if (m_view_key.empty()) // chk empty Private View key and enter it ......................
+			{
+				std::cout << teal << "Enter Private View Key:" << std::endl << magenta;
+				std::getline(std::cin, m_view_key);
+				std::cout << grey;
+				boost::algorithm::trim(m_view_key);
+				
+				if (m_view_key.empty())
+				{
+					fail_msg_writer() << "set a Private View key parameter with the --viev-key=hexadecimal_key";
+					return false;
+				}
+			}
+					
+			if (!Common::podFromHex(m_spend_key,m_spend_secret_key.data))
+			{
+				fail_msg_writer() << "Private Spend Key failed";
 				return false;
 			}
 			
-			if (!data.size() == sizeof(keys))
+			if (!Common::podFromHex(m_view_key,m_view_secret_key.data))
 			{
+				fail_msg_writer() << "Private View Key failed";
+				return false;
+			}
+			
+			if (!Crypto::check_skey(m_spend_secret_key)) // chk Private Spend key :::::::::
+			{
+				fail_msg_writer() << "Private Spend Key is invalid";
+				return false;
+			}
+			
+			if (!Crypto::check_skey(m_view_secret_key)) // chk View Spend key :::::::::
+			{
+				fail_msg_writer() << "Private View Key is invalid";
+				return false;
+			}		
+		}
+	   
+	if (m_restore_legacy) //legacy restore
+		{
+			m_is_recovery_mode = 1;
+			m_classic = 0; //always restore secondary key
+			m_is_copy = 1;
+			if (m_legacy_key.empty()) // chk empty seed and enter it ......................
+			{
+				std::cout << teal << "Enter Legacy Recovery Key:" << std::endl << magenta;
+				std::getline(std::cin, m_legacy_key);
+				std::cout << grey;
+				boost::algorithm::trim(m_legacy_key);
+				
+				if (m_legacy_key.empty())
+				{
+					fail_msg_writer() << "set a Legacy Recovery Key parameter with the --legacy-key=legacy_key";
+					return false;
+				}
+			}
+			
+			if (!m_legacy_key.empty())
+			{
+
+				uint64_t addressPrefix;
+				std::string data;
+				CryptoNote::AccountKeys keys;
+				
+				addressPrefix = parameters::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX;
+
+				if (!Tools::Base58::decode_addr(m_legacy_key, addressPrefix, data))
+				{
+					fail_msg_writer() << "can't decode key from Base58";
+					return false;
+				}
+				
+				if (!data.size() == sizeof(keys))
+				{
 					fail_msg_writer() << "data.size() != sizeof(keys)";
-				return false;
+					return false;
+				}
+				
+				std::memcpy(&keys, data.data(), sizeof(keys));
+				m_spend_secret_key = keys.spendSecretKey;
+				m_view_secret_key = keys.viewSecretKey;
+				
 			}
-			
-			std::memcpy(&keys, data.data(), sizeof(keys));
-			m_spend_secret_key = keys.spendSecretKey;
-			m_view_secret_key = keys.viewSecretKey;
-			
 		}
-    }
-// prep finished here ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    if (!new_wallet(
-		walletFileName, 
-		pwd_container.password(),
-		m_spend_secret_key,
-		m_view_secret_key,
-		m_is_recovery_mode,
-		m_is_copy,
-		!m_classic)) 
-	{
-		logger(ERROR, BRIGHT_RED) << "account creation failed";
-		return false;
-    }
-//todo - last action while gen or rest .............................................................................................
-    AccountKeys keys;
-    m_wallet->getAccountKeys(keys);
-		
-	std::string electrum_words;
-	bool success = try_seed(electrum_words,keys);
-		
-    if (!writeBackupFile(
-							walletBackupFile, 
-							m_wallet->getAddress(),
-							walletFileName,
-							pwd_container.password(),
-							keys,
-							success,
-							electrum_words
-						)
-		)
-						
-	{
-      logger(WARNING, BRIGHT_RED) << "Couldn't write wallet backup file: " + walletBackupFile;
-    }
-  } 
+// prep finished here ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+		if (!new_wallet(
+			walletFileName, 
+			pwd_container.password(),
+			m_spend_secret_key,
+			m_view_secret_key,
+			m_is_recovery_mode,
+			m_is_copy,
+			!m_classic)) 
+		{
+			logger(ERROR, BRIGHT_RED) << "account creation failed";
+			return false;
+		}
+//last action while gen or rest ....................................................................
+		AccountKeys keys;
+		m_wallet->getAccountKeys(keys);
+			
+		std::string electrum_words;
+		bool success = try_seed(electrum_words,keys);
+			
+		if (!writeBackupFile(
+								walletBackupFile, 
+								m_wallet->getAddress(),
+								walletFileName,
+								pwd_container.password(),
+								keys,
+								success,
+								electrum_words
+							)
+			)
+							
+		{
+		  logger(WARNING, BRIGHT_RED) << "Couldn't write wallet backup file: " + walletBackupFile;
+		}
+	} 
 	else // open file mode -----------------------------------------------------------------------------------------------------------------------
 	{
 		m_wallet.reset(new WalletLegacy(m_currency, *m_node));
@@ -1182,7 +1201,7 @@ if (m_restore_legacy) //legacy restore
 		<< "======================================================================" << std::endl << grey;
 	}
 
-  return true;
+	return true;
 }
 //----------------------------------------------------------------------------------------------------
 bool simple_wallet::deinit() {
@@ -1479,9 +1498,17 @@ void simple_wallet::externalTransactionCreated(CryptoNote::TransactionId transac
 		{
 			logPrefix << get_tx_time_str(txInfo) << " @ " << txInfo.blockHeight;
 		}
-
+	
+	uint64_t factor = 1;
+	
+//////////
+#ifdef SOLDO_CODEBASE
+	factor = 100;
+#endif
+//////////	
+		
 	if (txInfo.totalAmount >= 0){//debit aka deposit
-		if (txInfo.totalAmount >= 100000000){ //highlight amounts not less than 1.00
+		if (txInfo.totalAmount >= 10000000000/factor){ //highlight amounts not less than 1.00 in SLD and 100 otherwise
 			std::cout 
 				<< lime 
 				<< logPrefix.str() 
@@ -1514,7 +1541,7 @@ void simple_wallet::externalTransactionCreated(CryptoNote::TransactionId transac
 		<< m_currency.formatAmount(static_cast<uint64_t>(-txInfo.totalAmount)) 
 		<< std::endl 
 		<< grey;
-		}
+	}
 //$$$$
 	if (txInfo.messages.size() > 0) 
 	{
@@ -2027,6 +2054,7 @@ int main(int argc, char* argv[]) {
     std::string daemon_address = command_line::get_arg(vm, arg_daemon_address);
     std::string daemon_host = command_line::get_arg(vm, arg_daemon_host);
     uint16_t daemon_port = command_line::get_arg(vm, arg_daemon_port);
+	
     if (daemon_host.empty())
       daemon_host = "localhost";
     if (!daemon_port)
