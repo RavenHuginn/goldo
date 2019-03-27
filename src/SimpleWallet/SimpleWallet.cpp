@@ -302,15 +302,16 @@ JsonValue buildLoggerConfiguration(Level level, const std::string& logfile) {
 
   return loggerConfiguration;
 }
+///////////////////////////////////////////////////////////////////////////////
 std::error_code initAndLoadWallet(IWalletLegacy& wallet, std::istream& walletFile, const std::string& password) {
-  WalletHelper::InitWalletResultObserver initObserver;
-  std::future<std::error_code> f_initError = initObserver.initResult.get_future();
+	WalletHelper::InitWalletResultObserver initObserver;
+	std::future<std::error_code> f_initError = initObserver.initResult.get_future();
 
-  WalletHelper::IWalletRemoveObserverGuard removeGuard(wallet, initObserver);
-  wallet.initAndLoad(walletFile, password);
-  auto initError = f_initError.get();
+	WalletHelper::IWalletRemoveObserverGuard removeGuard(wallet, initObserver);
+	wallet.initAndLoad(walletFile, password);
+	auto initError = f_initError.get();
 
-  return initError;
+	return initError;
 }
 ///////////////////////////////////////////////////////////////////////////////
 std::string tryToOpenWalletOrLoadKeysOrThrow(LoggerRef& logger, std::unique_ptr<IWalletLegacy>& wallet, const std::string& walletFile, const std::string& password) {
@@ -341,6 +342,7 @@ std::string tryToOpenWalletOrLoadKeysOrThrow(LoggerRef& logger, std::unique_ptr<
     auto initError = initAndLoadWallet(*wallet, walletFile, password);
 
     walletFile.close();
+	
     if (initError) { //bad password, or legacy format
       if (keysExists) {
         std::stringstream ss;

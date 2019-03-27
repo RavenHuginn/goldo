@@ -103,7 +103,6 @@ bool Currency::generateGenesisBlock() {
 
   return true;
 }
-
 ////////////////////////////////////////////////////////////////////////////
 uint64_t Currency::baseRewardFunction(uint64_t alreadyGeneratedCoins, uint32_t height, const Crypto::Hash last_BlockHash) const 
 {
@@ -137,7 +136,7 @@ uint64_t Currency::baseRewardFunction(uint64_t alreadyGeneratedCoins, uint32_t h
 		base_reward = base_reward / 100;
 	}
 #endif
-//////////		
+//////////	
 	if (alreadyGeneratedCoins>parameters::MONEY_SUPPLY_MINEABLE_Z) 
 	{
 		base_reward = 1;
@@ -221,11 +220,11 @@ uint64_t Currency::Lottery(const Crypto::Hash lbh) const
 ////////////////////////////////////////////////////////////////////////////
 
 size_t Currency::blockGrantedFullRewardZoneByBlockVersion(uint8_t blockMajorVersion) const {
-  if (blockMajorVersion >= BLOCK_MAJOR_VERSION_4) {
-    return m_blockGrantedFullRewardZone;
-  } else {
-    return CryptoNote::parameters::CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_V1;
-  }
+	if (blockMajorVersion >= BLOCK_MAJOR_VERSION_4) {
+		return m_blockGrantedFullRewardZone;
+	} else {
+		return CryptoNote::parameters::CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_V1;
+	}
 }
 
 uint32_t Currency::upgradeHeight(uint8_t majorVersion) const {
@@ -725,7 +724,6 @@ difficulty_type Currency::nextDifficultyZawy(
 //std::cout << khaki << "DIFF Z-" << _difficultyWindow << ": " << nextDiffZ << grey << std::endl;	
     return nextDiffZ;
 }
-//******************************************************************************************************************
 //******************************************************************************************************************
 difficulty_type Currency::nextDifficulty(
 	std::vector<uint64_t> timestamps,

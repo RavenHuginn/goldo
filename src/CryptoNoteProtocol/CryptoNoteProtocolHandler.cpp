@@ -110,14 +110,15 @@ bool CryptoNoteProtocolHandler::start_sync(CryptoNoteConnectionContext& context)
 
   return true;
 }
-
+///////////////////////////////////////////////////////////////////////////////
 bool CryptoNoteProtocolHandler::get_stat_info(core_stat_info& stat_inf) {
-  return m_core.get_stat_info(stat_inf);
+	return m_core.get_stat_info(stat_inf);
 }
+///////////////////////////////////////////////////////////////////////////////
 void CryptoNoteProtocolHandler::log_connections() {
-
-  std::stringstream ss;
-
+	
+	std::stringstream ss;
+	
     std::cout
 		<< ENDL 
 		<< yellow
@@ -138,7 +139,7 @@ void CryptoNoteProtocolHandler::log_connections() {
 		<< grey
 		<< ENDL;
 
-  m_p2p->for_each_connection([&](const CryptoNoteConnectionContext& cntxt, PeerIdType peer_id) {
+	m_p2p->for_each_connection([&](const CryptoNoteConnectionContext& cntxt, PeerIdType peer_id) {
 		std::cout 
 			<< (cntxt.m_is_income ? teal : khaki )
 			<< std::string(cntxt.m_is_income ? "[INC]\t" : "[OUT]\t") 
@@ -165,20 +166,22 @@ void CryptoNoteProtocolHandler::log_connections() {
 */
 			<< ENDL;
 		
-  });
+	});
 	
     std::cout
 		<< grey
 		<< ENDL; 
 }
-
+///////////////////////////////////////////////////////////////////////////////
 uint32_t CryptoNoteProtocolHandler::get_current_blockchain_height() {
-  uint32_t height;
-  Crypto::Hash blockId;
-  m_core.get_blockchain_top(height, blockId);
-  return height;
+	
+	uint32_t height;
+	Crypto::Hash blockId;
+	m_core.get_blockchain_top(height, blockId);
+	
+	return height;
 }
-
+///////////////////////////////////////////////////////////////////////////////
 bool CryptoNoteProtocolHandler::process_payload_sync_data(const CORE_SYNC_DATA& hshd, CryptoNoteConnectionContext& context, bool is_inital) {
   if (context.m_state == CryptoNoteConnectionContext::state_befor_handshake && !is_inital)
     return true;
@@ -215,16 +218,17 @@ bool CryptoNoteProtocolHandler::process_payload_sync_data(const CORE_SYNC_DATA& 
 
   return true;
 }
-
+///////////////////////////////////////////////////////////////////////////////
 bool CryptoNoteProtocolHandler::get_payload_sync_data(CORE_SYNC_DATA& hshd) {
-  uint32_t current_height;
-  m_core.get_blockchain_top(current_height, hshd.top_id);
-  hshd.current_height = current_height;
-  hshd.current_height += 1;
-  return true;
+
+	uint32_t current_height;
+	m_core.get_blockchain_top(current_height, hshd.top_id);
+	hshd.current_height = current_height;
+	hshd.current_height += 1;
+
+	return true;
 }
-
-
+///////////////////////////////////////////////////////////////////////////////
 template <typename Command, typename Handler>
 int notifyAdaptor(const BinaryArray& reqBuf, CryptoNoteConnectionContext& ctx, Handler handler) {
 
@@ -238,79 +242,114 @@ int notifyAdaptor(const BinaryArray& reqBuf, CryptoNoteConnectionContext& ctx, H
 
   return handler(command, req, ctx);
 }
-
+///////////////////////////////////////////////////////////////////////////////
 #define HANDLE_NOTIFY(CMD, Handler) case CMD::ID: { ret = notifyAdaptor<CMD>(in, ctx, std::bind(Handler, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)); break; }
 
 int CryptoNoteProtocolHandler::handleCommand(bool is_notify, int command, const BinaryArray& in, BinaryArray& out, CryptoNoteConnectionContext& ctx, bool& handled) {
-  int ret = 0;
-  handled = true;
+	
+	int ret = 0;
+	handled = true;
 
-  switch (command) {
-    HANDLE_NOTIFY(NOTIFY_NEW_BLOCK, &CryptoNoteProtocolHandler::handle_notify_new_block)
-    HANDLE_NOTIFY(NOTIFY_NEW_TRANSACTIONS, &CryptoNoteProtocolHandler::handle_notify_new_transactions)
-    HANDLE_NOTIFY(NOTIFY_REQUEST_GET_OBJECTS, &CryptoNoteProtocolHandler::handle_request_get_objects)
-    HANDLE_NOTIFY(NOTIFY_RESPONSE_GET_OBJECTS, &CryptoNoteProtocolHandler::handle_response_get_objects)
-    HANDLE_NOTIFY(NOTIFY_REQUEST_CHAIN, &CryptoNoteProtocolHandler::handle_request_chain)
-    HANDLE_NOTIFY(NOTIFY_RESPONSE_CHAIN_ENTRY, &CryptoNoteProtocolHandler::handle_response_chain_entry)
-    HANDLE_NOTIFY(NOTIFY_REQUEST_TX_POOL, &CryptoNoteProtocolHandler::handleRequestTxPool)
+	switch (command) {
+		HANDLE_NOTIFY(NOTIFY_NEW_BLOCK, &CryptoNoteProtocolHandler::handle_notify_new_block)
+		HANDLE_NOTIFY(NOTIFY_NEW_TRANSACTIONS, &CryptoNoteProtocolHandler::handle_notify_new_transactions)
+		HANDLE_NOTIFY(NOTIFY_REQUEST_GET_OBJECTS, &CryptoNoteProtocolHandler::handle_request_get_objects)
+		HANDLE_NOTIFY(NOTIFY_RESPONSE_GET_OBJECTS, &CryptoNoteProtocolHandler::handle_response_get_objects)
+		HANDLE_NOTIFY(NOTIFY_REQUEST_CHAIN, &CryptoNoteProtocolHandler::handle_request_chain)
+		HANDLE_NOTIFY(NOTIFY_RESPONSE_CHAIN_ENTRY, &CryptoNoteProtocolHandler::handle_response_chain_entry)
+		HANDLE_NOTIFY(NOTIFY_REQUEST_TX_POOL, &CryptoNoteProtocolHandler::handleRequestTxPool)
 
-  default:
-    handled = false;
-  }
+		default:
+			handled = false;
+	}
 
-  return ret;
+	return ret;
 }
 
 #undef HANDLE_NOTIFY
 
+///////////////////////////////////////////////////////////////////////////////
 int CryptoNoteProtocolHandler::handle_notify_new_block(int command, NOTIFY_NEW_BLOCK::request& arg, CryptoNoteConnectionContext& context) {
-  logger(Logging::TRACE) << context << "NOTIFY_NEW_BLOCK (hop " << arg.hop << ")";
 
-  updateObservedHeight(arg.current_blockchain_height, context);
+	logger(Logging::TRACE) << context << "NOTIFY_NEW_BLOCK (hop " << arg.hop << ")";
+//	logger(Logging::INFO) << context << "NOTIFY_NEW_BLOCK [hop " << arg.hop << "]";
 
-  context.m_remote_blockchain_height = arg.current_blockchain_height;
+	updateObservedHeight(arg.current_blockchain_height, context);
 
-  if (context.m_state != CryptoNoteConnectionContext::state_normal) {
-    return 1;
-  }
+	context.m_remote_blockchain_height = arg.current_blockchain_height;
 
-  for (auto tx_blob_it = arg.b.txs.begin(); tx_blob_it != arg.b.txs.end(); tx_blob_it++) {
-    CryptoNote::tx_verification_context tvc = boost::value_initialized<decltype(tvc)>();
-    m_core.handle_incoming_tx(asBinaryArray(*tx_blob_it), tvc, true);
-    if (tvc.m_verifivation_failed) {
-      logger(Logging::INFO) << context << "Block verification failed: transaction verification failed, dropping connection";
-      context.m_state = CryptoNoteConnectionContext::state_shutdown;
-      return 1;
-    }
-  }
+	if (context.m_state != CryptoNoteConnectionContext::state_normal) {
+		return 1;
+	}
+	
+	//checking all transactions @ incoming block
+	for (auto tx_blob_it = arg.b.txs.begin(); tx_blob_it != arg.b.txs.end(); tx_blob_it++) {
+		
+		CryptoNote::tx_verification_context tvc = boost::value_initialized<decltype(tvc)>();
+		m_core.handle_incoming_tx(asBinaryArray(*tx_blob_it), tvc, true);
+		
+		if (tvc.m_verifivation_failed) {
+			
+			logger(Logging::INFO) 
+				<< context 
+				<< "Transaction verification failed in the incoming block, dropping connection";
+				
+			context.m_state = CryptoNoteConnectionContext::state_shutdown;
+			
+			return 1;
+		}
+	}
 
-  block_verification_context bvc = boost::value_initialized<block_verification_context>();
-  m_core.handle_incoming_block_blob(asBinaryArray(arg.b.block), bvc, true, false);
-  if (bvc.m_verifivation_failed) {
-    logger(Logging::DEBUGGING) << context << "Block verification failed, dropping connection";
-    context.m_state = CryptoNoteConnectionContext::state_shutdown;
-    return 1;
-  }
-  if (bvc.m_added_to_main_chain) {
-    ++arg.hop;
-    //TODO: Add here announce protocol usage
-    relay_post_notify<NOTIFY_NEW_BLOCK>(*m_p2p, arg, &context.m_connection_id);
-    // relay_block(arg, context);
+	block_verification_context bvc = boost::value_initialized<block_verification_context>();
+////  
+//	logger(Logging::INFO) << "START handle_incoming_block_blob";
+	m_core.handle_incoming_block_blob(asBinaryArray(arg.b.block), bvc, true, false);
+//	logger(Logging::INFO) << "FINISH handle_incoming_block_blob";
+////  
+	if (bvc.m_verifivation_failed) {
+		
+		logger(Logging::DEBUGGING) 
+			<< context 
+			<< "Incoming block verification failed, dropping connection";
 
-    if (bvc.m_switched_to_alt_chain) {
-      requestMissingPoolTransactions(context);
-    }
-  } else if (bvc.m_marked_as_orphaned) {
-    context.m_state = CryptoNoteConnectionContext::state_synchronizing;
-    NOTIFY_REQUEST_CHAIN::request r = boost::value_initialized<NOTIFY_REQUEST_CHAIN::request>();
-    r.block_ids = m_core.buildSparseChain();
-    logger(Logging::TRACE) << context << "-->>NOTIFY_REQUEST_CHAIN: m_block_ids.size()=" << r.block_ids.size();
-    post_notify<NOTIFY_REQUEST_CHAIN>(*m_p2p, r, context);
-  }
+		context.m_state = CryptoNoteConnectionContext::state_shutdown;
+		
+		return 1;
+	}
+	
+	if (bvc.m_added_to_main_chain) {
+		
+		++arg.hop;
+//TODO: Add here announce protocol usage
+////
+//logger(Logging::INFO,CYAN)  << "RELAY " << context << " = " << context.m_connection_id << " : " << arg.current_blockchain_height;// << " -> " << ;
+
+		relay_post_notify<NOTIFY_NEW_BLOCK>(*m_p2p, arg, &context.m_connection_id);
+////
+// relay_block(arg, context);
+
+		if (bvc.m_switched_to_alt_chain) {
+			requestMissingPoolTransactions(context);
+		}
+	} else if (bvc.m_marked_as_orphaned) {
+		
+		context.m_state = CryptoNoteConnectionContext::state_synchronizing;
+		
+		NOTIFY_REQUEST_CHAIN::request r = boost::value_initialized<NOTIFY_REQUEST_CHAIN::request>();
+		
+		r.block_ids = m_core.buildSparseChain();
+		
+		logger(Logging::TRACE) 
+			<< context 
+			<< "-->>NOTIFY_REQUEST_CHAIN: m_block_ids.size()=" 
+			<< r.block_ids.size();
+			
+		post_notify<NOTIFY_REQUEST_CHAIN>(*m_p2p, r, context);
+	}
 
   return 1;
 }
-
+///////////////////////////////////////////////////////////////////////////////
 int CryptoNoteProtocolHandler::handle_notify_new_transactions(int command, NOTIFY_NEW_TRANSACTIONS::request& arg, CryptoNoteConnectionContext& context) {
   logger(Logging::TRACE) << context << "NOTIFY_NEW_TRANSACTIONS";
   if (context.m_state != CryptoNoteConnectionContext::state_normal)
@@ -336,19 +375,40 @@ int CryptoNoteProtocolHandler::handle_notify_new_transactions(int command, NOTIF
 
   return true;
 }
-
+////////////////////////////////////////////////////////////////////////////
 int CryptoNoteProtocolHandler::handle_request_get_objects(int command, NOTIFY_REQUEST_GET_OBJECTS::request& arg, CryptoNoteConnectionContext& context) {
-  logger(Logging::TRACE) << context << "NOTIFY_REQUEST_GET_OBJECTS";
-  NOTIFY_RESPONSE_GET_OBJECTS::request rsp;
-  if (!m_core.handle_get_objects(arg, rsp)) {
-    logger(Logging::ERROR) << context << "failed to handle request NOTIFY_REQUEST_GET_OBJECTS, dropping connection";
-    context.m_state = CryptoNoteConnectionContext::state_shutdown;
-  }
-  logger(Logging::TRACE) << context << "-->>NOTIFY_RESPONSE_GET_OBJECTS: blocks.size()=" << rsp.blocks.size() << ", txs.size()=" << rsp.txs.size()
-    << ", rsp.m_current_blockchain_height=" << rsp.current_blockchain_height << ", missed_ids.size()=" << rsp.missed_ids.size();
-  post_notify<NOTIFY_RESPONSE_GET_OBJECTS>(*m_p2p, rsp, context);
-  return 1;
+	
+	logger(Logging::TRACE) 
+		<< context 
+		<< "NOTIFY_REQUEST_GET_OBJECTS";
+		
+	NOTIFY_RESPONSE_GET_OBJECTS::request rsp;
+	
+	if (!m_core.handle_get_objects(arg, rsp)) {
+		
+		logger(Logging::ERROR) 
+			<< context 
+			<< "failed to handle request NOTIFY_REQUEST_GET_OBJECTS, dropping connection";
+			
+		context.m_state = CryptoNoteConnectionContext::state_shutdown;
+	}
+	
+	logger(Logging::TRACE) 
+		<< context 
+		<< "-->>NOTIFY_RESPONSE_GET_OBJECTS: blocks.size()=" 
+		<< rsp.blocks.size() 
+		<< ", txs.size()=" 
+		<< rsp.txs.size()
+		<< ", rsp.m_current_blockchain_height=" 
+		<< rsp.current_blockchain_height 
+		<< ", missed_ids.size()=" 
+		<< rsp.missed_ids.size();
+		
+	post_notify<NOTIFY_RESPONSE_GET_OBJECTS>(*m_p2p, rsp, context);
+	
+	return 1;
 }
+////////////////////////////////////////////////////////////////////////////
 
 int CryptoNoteProtocolHandler::handle_response_get_objects(int command, NOTIFY_RESPONSE_GET_OBJECTS::request& arg, CryptoNoteConnectionContext& context) {
   logger(Logging::TRACE) << context << "NOTIFY_RESPONSE_GET_OBJECTS";
@@ -434,56 +494,75 @@ int CryptoNoteProtocolHandler::handle_response_get_objects(int command, NOTIFY_R
 
   return 1;
 }
-
+///////////////////////////////////////////////////////////////////////////////
 int CryptoNoteProtocolHandler::processObjects(CryptoNoteConnectionContext& context, const std::vector<block_complete_entry>& blocks) {
 
-  for (const block_complete_entry& block_entry : blocks) {
-    if (m_stop) {
-      break;
-    }
+	for (const block_complete_entry& block_entry : blocks) {
+		
+		if (m_stop) {
+			break;
+		}
+		//process transactions
+		for (auto& tx_blob : block_entry.txs) {
+			
+			tx_verification_context tvc = boost::value_initialized<decltype(tvc)>();
+			m_core.handle_incoming_tx(asBinaryArray(tx_blob), tvc, true);
+			
+			if (tvc.m_verifivation_failed) {
+			  
+				logger(Logging::ERROR, RED) 
+					<< context 
+					<< "transaction verification failed on NOTIFY_RESPONSE_GET_OBJECTS, \r\ntx_id = "
+					<< Common::podToHex(getBinaryArrayHash(asBinaryArray(tx_blob))) 
+					<< ", dropping connection";
+				  
+				context.m_state = CryptoNoteConnectionContext::state_shutdown;
+				
+				return 1;
+			}
+		}
+		// process block
+		block_verification_context bvc = boost::value_initialized<block_verification_context>();
+		m_core.handle_incoming_block_blob(asBinaryArray(block_entry.block), bvc, false, false);
 
-    //process transactions
-    for (auto& tx_blob : block_entry.txs) {
-      tx_verification_context tvc = boost::value_initialized<decltype(tvc)>();
-      m_core.handle_incoming_tx(asBinaryArray(tx_blob), tvc, true);
-      if (tvc.m_verifivation_failed) {
-		  
-        logger(Logging::ERROR, RED) << context << "transaction verification failed on NOTIFY_RESPONSE_GET_OBJECTS, \r\ntx_id = "
-          << Common::podToHex(getBinaryArrayHash(asBinaryArray(tx_blob))) << ", dropping connection";
+		if (bvc.m_verifivation_failed) {
+			
+			logger(Logging::DEBUGGING) 
+				<< context 
+				<< "Block verification is failed, dropping connection";
+				
+			context.m_state = CryptoNoteConnectionContext::state_shutdown;
+			
+			return 1;
+		} else if (bvc.m_marked_as_orphaned) {
+			
+			logger(Logging::INFO) 
+				<< context 
+				<< "Block received at sync phase was marked as orphaned, dropping connection";
+				
+			context.m_state = CryptoNoteConnectionContext::state_shutdown;
+			
+			return 1;
+		} else if (bvc.m_already_exists) {
+			
+			logger(Logging::DEBUGGING) 
+				<< context 
+				
+				<< "Block already exists, switching to idle state";
+				
+			context.m_state = CryptoNoteConnectionContext::state_idle;
+			context.m_needed_objects.clear();
+			context.m_requested_objects.clear();
+			
+			return 1;
+		}
 
-        context.m_state = CryptoNoteConnectionContext::state_shutdown;
-        return 1;
-      }
-    }
+		m_dispatcher.yield();
+	}
 
-    // process block
-    block_verification_context bvc = boost::value_initialized<block_verification_context>();
-    m_core.handle_incoming_block_blob(asBinaryArray(block_entry.block), bvc, false, false);
-
-    if (bvc.m_verifivation_failed) {
-      logger(Logging::DEBUGGING) << context << "Block verification failed, dropping connection";
-      context.m_state = CryptoNoteConnectionContext::state_shutdown;
-      return 1;
-    } else if (bvc.m_marked_as_orphaned) {
-      logger(Logging::INFO) << context << "Block received at sync phase was marked as orphaned, dropping connection";
-      context.m_state = CryptoNoteConnectionContext::state_shutdown;
-      return 1;
-    } else if (bvc.m_already_exists) {
-      logger(Logging::DEBUGGING) << context << "Block already exists, switching to idle state";
-      context.m_state = CryptoNoteConnectionContext::state_idle;
-      context.m_needed_objects.clear();
-      context.m_requested_objects.clear();
-      return 1;
-    }
-
-    m_dispatcher.yield();
-  }
-
-  return 0;
-
+	return 0;
 }
-
-
+///////////////////////////////////////////////////////////////////////////////
 bool CryptoNoteProtocolHandler::on_idle() {
   return m_core.on_idle();
 }
@@ -589,147 +668,153 @@ bool CryptoNoteProtocolHandler::on_connection_synchronized() {
 int CryptoNoteProtocolHandler::handle_response_chain_entry(int command, NOTIFY_RESPONSE_CHAIN_ENTRY::request& arg, CryptoNoteConnectionContext& context) {
   logger(Logging::TRACE) << context << "NOTIFY_RESPONSE_CHAIN_ENTRY: m_block_ids.size()=" << arg.m_block_ids.size()
     << ", m_start_height=" << arg.start_height << ", m_total_height=" << arg.total_height;
-
-  if (!arg.m_block_ids.size()) {
+                                                                                   
+  if (!arg.m_block_ids.size()) {                                                   
     logger(Logging::ERROR) << context << "sent empty m_block_ids, dropping connection";
-    context.m_state = CryptoNoteConnectionContext::state_shutdown;
-    return 1;
-  }
-
-  if (!m_core.have_block(arg.m_block_ids.front())) {
-    logger(Logging::ERROR)
-      << context << "sent m_block_ids starting from unknown id: "
-      << Common::podToHex(arg.m_block_ids.front())
-      << " , dropping connection";
-    context.m_state = CryptoNoteConnectionContext::state_shutdown;
-    return 1;
-  }
-
-  context.m_remote_blockchain_height = arg.total_height;
+    context.m_state = CryptoNoteConnectionContext::state_shutdown;                 
+    return 1;                                                                      
+  }                                                                                
+                                                                                   
+  if (!m_core.have_block(arg.m_block_ids.front())) {                               
+    logger(Logging::ERROR)                                                         
+      << context << "sent m_block_ids starting from unknown id: "                  
+      << Common::podToHex(arg.m_block_ids.front())                                 
+      << " , dropping connection";                                                 
+    context.m_state = CryptoNoteConnectionContext::state_shutdown;                 
+    return 1;                                                                      
+  }                                                                                
+                                                                                   
+  context.m_remote_blockchain_height = arg.total_height;                           
   context.m_last_response_height = arg.start_height + static_cast<uint32_t>(arg.m_block_ids.size()) - 1;
+                                                                                   
+  if (context.m_last_response_height > context.m_remote_blockchain_height) {       
+    logger(Logging::ERROR)                                                         
+      << context                                                                   
+      << "sent wrong NOTIFY_RESPONSE_CHAIN_ENTRY, with \r\nm_total_height="        
+      << arg.total_height << "\r\nm_start_height=" << arg.start_height             
+      << "\r\nm_block_ids.size()=" << arg.m_block_ids.size();                      
+    context.m_state = CryptoNoteConnectionContext::state_shutdown;                 
+  }                                                                                
+                                                                                   
+  for (auto& bl_id : arg.m_block_ids) {                                            
+    if (!m_core.have_block(bl_id))                                                 
+      context.m_needed_objects.push_back(bl_id);                                   
+  }                                                                                
+                                                                                   
+  request_missing_objects(context, false);                                         
+  return 1;                                                                        
+}                                                                                  
+///////////////////////////////////////////////////////////////////////////////
+int CryptoNoteProtocolHandler::handleRequestTxPool
+	(
+	int command, 
+	NOTIFY_REQUEST_TX_POOL::request& arg, 
+	CryptoNoteConnectionContext& context
+	) 
+{
 
-  if (context.m_last_response_height > context.m_remote_blockchain_height) {
-    logger(Logging::ERROR)
-      << context
-      << "sent wrong NOTIFY_RESPONSE_CHAIN_ENTRY, with \r\nm_total_height="
-      << arg.total_height << "\r\nm_start_height=" << arg.start_height
-      << "\r\nm_block_ids.size()=" << arg.m_block_ids.size();
-    context.m_state = CryptoNoteConnectionContext::state_shutdown;
-  }
+	logger(Logging::TRACE) << context << "NOTIFY_REQUEST_TX_POOL: txs.size() = " << arg.txs.size();
+	
+	std::vector<Transaction> addedTransactions;                                      
+	std::vector<Crypto::Hash> deletedTransactions;                                   
+	m_core.getPoolChanges(arg.txs, addedTransactions, deletedTransactions);          
 
-  for (auto& bl_id : arg.m_block_ids) {
-    if (!m_core.have_block(bl_id))
-      context.m_needed_objects.push_back(bl_id);
-  }
-
-  request_missing_objects(context, false);
-  return 1;
-}
-
-int CryptoNoteProtocolHandler::handleRequestTxPool(int command, NOTIFY_REQUEST_TX_POOL::request& arg,
-                                                     CryptoNoteConnectionContext& context) {
-  logger(Logging::TRACE) << context << "NOTIFY_REQUEST_TX_POOL: txs.size() = " << arg.txs.size();
-
-  std::vector<Transaction> addedTransactions;
-  std::vector<Crypto::Hash> deletedTransactions;
-  m_core.getPoolChanges(arg.txs, addedTransactions, deletedTransactions);
-
-  if (!addedTransactions.empty()) {
-    NOTIFY_NEW_TRANSACTIONS::request notification;
-    for (auto& tx : addedTransactions) {
-      notification.txs.push_back(asString(toBinaryArray(tx)));
-    }
-
-    bool ok = post_notify<NOTIFY_NEW_TRANSACTIONS>(*m_p2p, notification, context);
-    if (!ok) {
+	if (!addedTransactions.empty()) {                                                
+    NOTIFY_NEW_TRANSACTIONS::request notification;                                 
+    for (auto& tx : addedTransactions) {                                           
+      notification.txs.push_back(asString(toBinaryArray(tx)));                     
+    }                                                                              
+                                                                                   
+    bool ok = post_notify<NOTIFY_NEW_TRANSACTIONS>(*m_p2p, notification, context); 
+    if (!ok) {                                                                     
       logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Failed to post notification NOTIFY_NEW_TRANSACTIONS to " << context.m_connection_id;
-    }
-  }
+    }                                                                              
+  }                                                                                
 
-  return 1;
-}
-
-
-void CryptoNoteProtocolHandler::relay_block(NOTIFY_NEW_BLOCK::request& arg) {
-  auto buf = LevinProtocol::encode(arg);
-  m_p2p->externalRelayNotifyToAll(NOTIFY_NEW_BLOCK::ID, buf);
-}
-
+	return 1;                                                                        
+}                                                                                  
+///////////////////////////////////////////////////////////////////////////////
+void CryptoNoteProtocolHandler::relay_block(NOTIFY_NEW_BLOCK::request& arg) {     
+ 
+	auto buf = LevinProtocol::encode(arg);                                           
+	m_p2p->externalRelayNotifyToAll(NOTIFY_NEW_BLOCK::ID, buf);                      
+}                                                                                  
+///////////////////////////////////////////////////////////////////////////////
 void CryptoNoteProtocolHandler::relay_transactions(NOTIFY_NEW_TRANSACTIONS::request& arg) {
-  auto buf = LevinProtocol::encode(arg);
-  m_p2p->externalRelayNotifyToAll(NOTIFY_NEW_TRANSACTIONS::ID, buf);
-}
-
+  auto buf = LevinProtocol::encode(arg);                                           
+  m_p2p->externalRelayNotifyToAll(NOTIFY_NEW_TRANSACTIONS::ID, buf);               
+}                                                                                  
+                                                                                   
 void CryptoNoteProtocolHandler::requestMissingPoolTransactions(const CryptoNoteConnectionContext& context) {
-  if (context.version < P2PProtocolVersion::V1) {
-    return;
-  }
-
-  auto poolTxs = m_core.getPoolTransactions();
-
-  NOTIFY_REQUEST_TX_POOL::request notification;
-  for (auto& tx : poolTxs) {
-    notification.txs.emplace_back(getObjectHash(tx));
-  }
-
-  bool ok = post_notify<NOTIFY_REQUEST_TX_POOL>(*m_p2p, notification, context);
-  if (!ok) {
+  if (context.version < P2PProtocolVersion::V1) {                                  
+    return;                                                                        
+  }                                                                                
+                                                                                   
+  auto poolTxs = m_core.getPoolTransactions();                                     
+                                                                                   
+  NOTIFY_REQUEST_TX_POOL::request notification;                                    
+  for (auto& tx : poolTxs) {                                                       
+    notification.txs.emplace_back(getObjectHash(tx));                              
+  }                                                                                
+                                                                                   
+  bool ok = post_notify<NOTIFY_REQUEST_TX_POOL>(*m_p2p, notification, context);    
+  if (!ok) {                                                                       
     logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Failed to post notification NOTIFY_REQUEST_TX_POOL to " << context.m_connection_id;
-  }
-}
-
+  }                                                                                
+}                                                                                  
+                                                                                   
 void CryptoNoteProtocolHandler::updateObservedHeight(uint32_t peerHeight, const CryptoNoteConnectionContext& context) {
-  bool updated = false;
-  {
-    std::lock_guard<std::mutex> lock(m_observedHeightMutex);
-
-    uint32_t height = m_observedHeight;
-    if (peerHeight > context.m_remote_blockchain_height) {
-      m_observedHeight = std::max(m_observedHeight, peerHeight);
-      if (m_observedHeight != height) {
-        updated = true;
-      }
+  bool updated = false;                                                            
+  {                                                                                
+    std::lock_guard<std::mutex> lock(m_observedHeightMutex);                       
+                                                                                   
+    uint32_t height = m_observedHeight;                                            
+    if (peerHeight > context.m_remote_blockchain_height) {                         
+      m_observedHeight = std::max(m_observedHeight, peerHeight);                   
+      if (m_observedHeight != height) {                                            
+        updated = true;                                                            
+      }                                                                            
     } else if (peerHeight != context.m_remote_blockchain_height && context.m_remote_blockchain_height == m_observedHeight) {
       //the client switched to alternative chain and had maximum observed height. need to recalculate max height
-      recalculateMaxObservedHeight(context);
-      if (m_observedHeight != height) {
-        updated = true;
-      }
-    }
-  }
-
-  if (updated) {
-    logger(TRACE) << "Observed height updated: " << m_observedHeight;
+      recalculateMaxObservedHeight(context);                                       
+      if (m_observedHeight != height) {                                            
+        updated = true;                                                            
+      }                                                                            
+    }                                                                              
+  }                                                                                
+                                                                                   
+  if (updated) {                                                                   
+    logger(TRACE) << "Observed height updated: " << m_observedHeight;              
     m_observerManager.notify(&ICryptoNoteProtocolObserver::lastKnownBlockHeightUpdated, m_observedHeight);
-  }
-}
-
+  }                                                                                
+}                                                                                  
+                                                                                   
 void CryptoNoteProtocolHandler::recalculateMaxObservedHeight(const CryptoNoteConnectionContext& context) {
-  //should be locked outside
-  uint32_t peerHeight = 0;
+  //should be locked outside                                                       
+  uint32_t peerHeight = 0;                                                         
   m_p2p->for_each_connection([&peerHeight, &context](const CryptoNoteConnectionContext& ctx, PeerIdType peerId) {
-    if (ctx.m_connection_id != context.m_connection_id) {
-      peerHeight = std::max(peerHeight, ctx.m_remote_blockchain_height);
-    }
-  });
-
-  uint32_t localHeight = 0;
-  Crypto::Hash ignore;
-  m_core.get_blockchain_top(localHeight, ignore);
-  m_observedHeight = std::max(peerHeight, localHeight + 1);
-}
-
-uint32_t CryptoNoteProtocolHandler::getObservedHeight() const {
-  std::lock_guard<std::mutex> lock(m_observedHeightMutex);
-  return m_observedHeight;
-};
-
+    if (ctx.m_connection_id != context.m_connection_id) {                          
+      peerHeight = std::max(peerHeight, ctx.m_remote_blockchain_height);           
+    }                                                                              
+  });                                                                              
+                                                                                   
+  uint32_t localHeight = 0;                                                        
+  Crypto::Hash ignore;                                                             
+  m_core.get_blockchain_top(localHeight, ignore);                                  
+  m_observedHeight = std::max(peerHeight, localHeight + 1);                        
+}                                                                                  
+                                                                                   
+uint32_t CryptoNoteProtocolHandler::getObservedHeight() const {                    
+  std::lock_guard<std::mutex> lock(m_observedHeightMutex);                         
+  return m_observedHeight;                                                         
+};                                                                                 
+                                                                                   
 bool CryptoNoteProtocolHandler::addObserver(ICryptoNoteProtocolObserver* observer) {
-  return m_observerManager.add(observer);
-}
-
+  return m_observerManager.add(observer);                                          
+}                                                                                  
+                                                                                   
 bool CryptoNoteProtocolHandler::removeObserver(ICryptoNoteProtocolObserver* observer) {
-  return m_observerManager.remove(observer);
-}
-
-};
+  return m_observerManager.remove(observer);                                       
+}                                                                                  
+                                                                                   
+};                                                                                                                                                                    

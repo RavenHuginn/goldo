@@ -183,27 +183,39 @@ void P2pNode::load(std::istream& in) {
   BinaryInputStreamSerializer a(stream);
   CryptoNote::serialize(*this, a);
 }
-
+///////////////////////////////////////////////////////////////////////////////
 void P2pNode::acceptLoop() {
-  while (!m_stopRequested) {
-    try {
-      auto connection = m_listener.accept();
-      auto ctx = new P2pContext(m_dispatcher, std::move(connection), true, 
-        getRemoteAddress(connection), m_cfg.getTimedSyncInterval(), getGenesisPayload());
-      logger(INFO) << "Incoming connection from " << ctx->getRemoteAddress();
-      workingContextGroup.spawn([this, ctx] {
-        preprocessIncomingConnection(ContextPtr(ctx));
-      });
-    } catch (InterruptedException&) {
-      break;
-    } catch (const std::exception& e) {
-      logger(WARNING) << "Exception in acceptLoop: " << e.what();
-    }
-  }
+	while (!m_stopRequested) {
+		try {
+			auto connection = m_listener.accept();
+			
+			auto ctx = new P2pContext(
+										m_dispatcher, 
+										std::move(connection), 
+										true,
+										getRemoteAddress(connection), 
+										m_cfg.getTimedSyncInterval(), 
+										getGenesisPayload()
+									);
+									
+			logger(INFO) << "Incoming connection from " << ctx->getRemoteAddress();
+			
+			workingContextGroup.spawn(
+				[this, ctx] 
+				{
+					preprocessIncomingConnection(ContextPtr(ctx));
+				}
+			);
+		} catch (InterruptedException&) {
+			break;
+		} catch (const std::exception& e) {
+			logger(WARNING) << "Exception in acceptLoop: " << e.what();
+		}
+	}
 
-  logger(DEBUGGING) << "acceptLoop finished";
+	logger(DEBUGGING) << "acceptLoop finished";
 }
-
+///////////////////////////////////////////////////////////////////////////////
 void P2pNode::connectorLoop() {
   while (!m_stopRequested) {
     try {
@@ -267,35 +279,49 @@ void P2pNode::makeExpectedConnectionsCount(const PeerlistManager::Peerlist& peer
     }
   }
 }
-
+///////////////////////////////////////////////////////////////////////////////
 bool P2pNode::makeNewConnectionFromPeerlist(const PeerlistManager::Peerlist& peerlist) {
-  size_t peerIndex;
-  PeerIndexGenerator idxGen(std::min<uint64_t>(peerlist.count() - 1, m_cfg.getPeerListConnectRange()));
+	
+	size_t peerIndex;
+	PeerIndexGenerator idxGen(std::min<uint64_t>(peerlist.count() - 1, m_cfg.getPeerListConnectRange()));
 
-  for (size_t tryCount = 0; idxGen.generate(peerIndex) && tryCount < m_cfg.getPeerListGetTryCount(); ++tryCount) {
-    PeerlistEntry peer;
-    if (!peerlist.get(peer, peerIndex)) {
-      logger(WARNING) << "Failed to get peer from list, idx = " << peerIndex;
-      continue;
-    }
+	for (size_t tryCount = 0; idxGen.generate(peerIndex) && tryCount < m_cfg.getPeerListGetTryCount(); ++tryCount) {
+		
+		PeerlistEntry peer;
+		
+		if (!peerlist.get(peer, peerIndex)) {
+			
+			logger(WARNING) 
+				<< "Failed to get peer from list, idx = " 
+				<< peerIndex;
+				
+			continue;
+		}
 
-    if (isPeerUsed(peer)) {
-      continue;
-    }
+		if (isPeerUsed(peer)) {
+			continue;
+		}
 
-    logger(DEBUGGING) << "Selected peer: [" << peer.id << " " << peer.adr << "] last_seen: " <<
-      (peer.last_seen ? Common::timeIntervalToString(time(NULL) - peer.last_seen) : "never");
+		logger(DEBUGGING) 
+			<< "Selected peer: [" 
+			<< peer.id 
+			<< " " 
+			<< peer.adr 
+			<< "] last_seen: " 
+			<< (peer.last_seen ? Common::timeIntervalToString(time(NULL) - peer.last_seen) : "never");
 
-    auto conn = tryToConnectPeer(peer.adr);
-    if (conn.get()) {
-      enqueueConnection(createProxy(std::move(conn)));
-      return true;
-    }
-  }
+		auto conn = tryToConnectPeer(peer.adr);
+		
+		if (conn.get()) {
+			enqueueConnection(createProxy(std::move(conn)));
+			return true;
+		}
+	}
 
-  return false;
+	return false;
 }
-  
+///////////////////////////////////////////////////////////////////////////////
+ 
 void P2pNode::preprocessIncomingConnection(ContextPtr ctx) {
   try {
     logger(DEBUGGING) << *ctx << "preprocessIncomingConnection";

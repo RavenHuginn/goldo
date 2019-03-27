@@ -220,18 +220,18 @@ void WalletLegacy::initWithKeys(const AccountKeys& accountKeys, const std::strin
 }
 ///////////////////////////////////////////////////////////////////////////////
 void WalletLegacy::initAndLoad(std::istream& source, const std::string& password) {
-  std::unique_lock<std::mutex> stateLock(m_cacheMutex);
+	std::unique_lock<std::mutex> stateLock(m_cacheMutex);
 
-  if (m_state != NOT_INITIALIZED) {
-    throw std::system_error(make_error_code(error::ALREADY_INITIALIZED));
-  }
+	if (m_state != NOT_INITIALIZED) {
+		throw std::system_error(make_error_code(error::ALREADY_INITIALIZED));
+	}
 
-  m_password = password;
-  m_state = LOADING;
-      
-  m_asyncContextCounter.addAsyncContext();
-  std::thread loader(&WalletLegacy::doLoad, this, std::ref(source));
-  loader.detach();
+	m_password = password;
+	m_state = LOADING;
+	  
+	m_asyncContextCounter.addAsyncContext();
+	std::thread loader(&WalletLegacy::doLoad, this, std::ref(source));
+	loader.detach();
 }
 ///////////////////////////////////////////////////////////////////////////////
 void WalletLegacy::initSync() {
@@ -252,35 +252,37 @@ void WalletLegacy::initSync() {
 }
 ///////////////////////////////////////////////////////////////////////////////
 void WalletLegacy::doLoad(std::istream& source) {
-  ContextCounterHolder counterHolder(m_asyncContextCounter);
-  try {
-    std::unique_lock<std::mutex> lock(m_cacheMutex);
-    
-    std::string cache;
-    WalletLegacySerializer serializer(m_account, m_transactionsCache);
-    serializer.deserialize(source, m_password, cache);
-      
-    initSync();
+	ContextCounterHolder counterHolder(m_asyncContextCounter);
+	try {
+		std::unique_lock<std::mutex> lock(m_cacheMutex);
 
-    try {
-      if (!cache.empty()) {
-        std::stringstream stream(cache);
-        m_transfersSync.load(stream);
-      }
-    } catch (const std::exception&) {
-      // ignore cache loading errors
-    }
-  } catch (std::system_error& e) {
-    runAtomic(m_cacheMutex, [this] () {this->m_state = WalletLegacy::NOT_INITIALIZED;} );
-    m_observerManager.notify(&IWalletLegacyObserver::initCompleted, e.code());
-    return;
-  } catch (std::exception&) {
-    runAtomic(m_cacheMutex, [this] () {this->m_state = WalletLegacy::NOT_INITIALIZED;} );
-    m_observerManager.notify(&IWalletLegacyObserver::initCompleted, make_error_code(CryptoNote::error::INTERNAL_WALLET_ERROR));
-    return;
-  }
+		std::string cache;
+		WalletLegacySerializer serializer(m_account, m_transactionsCache);
+		serializer.deserialize(source, m_password, cache);
+		  
+		initSync();
 
-  m_observerManager.notify(&IWalletLegacyObserver::initCompleted, std::error_code());
+		try {
+			if (!cache.empty()) {
+				std::stringstream stream(cache);
+				m_transfersSync.load(stream);
+			}
+		} catch (const std::exception&) {
+		  // ignore cache loading errors
+		}
+	} catch (std::system_error& e) {
+		runAtomic(m_cacheMutex, [this] () {this->m_state = WalletLegacy::NOT_INITIALIZED;} );
+		
+		m_observerManager.notify(&IWalletLegacyObserver::initCompleted, e.code());
+		return;
+	} catch (std::exception&) {
+		
+		runAtomic(m_cacheMutex, [this] () {this->m_state = WalletLegacy::NOT_INITIALIZED;} );
+		m_observerManager.notify(&IWalletLegacyObserver::initCompleted, make_error_code(CryptoNote::error::INTERNAL_WALLET_ERROR));
+		return;
+	}
+
+	m_observerManager.notify(&IWalletLegacyObserver::initCompleted, std::error_code());
 }
 ///////////////////////////////////////////////////////////////////////////////
 void WalletLegacy::shutdown() {
