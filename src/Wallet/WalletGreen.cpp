@@ -760,28 +760,30 @@ void WalletGreen::prepareTransaction(std::vector<WalletOuts>&& wallets,
 }
 
 void WalletGreen::validateTransactionParameters(const TransactionParameters& transactionParameters) {
-  if (transactionParameters.destinations.empty()) {
-    throw std::system_error(make_error_code(error::ZERO_DESTINATION));
-  }
+	
+	if (transactionParameters.destinations.empty()) {
+		throw std::system_error(make_error_code(error::ZERO_DESTINATION));
+	}
 
-  if (transactionParameters.fee < m_currency.minimumFee()) {
-    throw std::system_error(make_error_code(error::FEE_TOO_SMALL));
-  }
+	if (transactionParameters.ttl == 0 && transactionParameters.fee < m_currency.minimumFee()) {
+		throw std::system_error(make_error_code(error::FEE_TOO_SMALL));
+	}
 
-  if (transactionParameters.donation.address.empty() != (transactionParameters.donation.threshold == 0)) {
-    throw std::system_error(make_error_code(error::WRONG_PARAMETERS), "DonationSettings must have both address and threshold parameters filled");
-  }
+	if (transactionParameters.donation.address.empty() != (transactionParameters.donation.threshold == 0)) {
+		throw std::system_error(make_error_code(error::WRONG_PARAMETERS), "DonationSettings must have both address and threshold parameters filled");
+	}
 
-  validateAddresses(transactionParameters.sourceAddresses, m_currency);
+	validateAddresses(transactionParameters.sourceAddresses, m_currency);
 
-  auto badAddr = std::find_if(transactionParameters.sourceAddresses.begin(), transactionParameters.sourceAddresses.end(), [this](const std::string& addr) {
-    return !isMyAddress(addr);
-  });
-  if (badAddr != transactionParameters.sourceAddresses.end()) {
-    throw std::system_error(make_error_code(error::BAD_ADDRESS), "Source address must belong to current container: " + *badAddr);
-  }
+	auto badAddr = std::find_if(transactionParameters.sourceAddresses.begin(), transactionParameters.sourceAddresses.end(), [this](const std::string& addr) {
+		return !isMyAddress(addr);
+	});
+	
+	if (badAddr != transactionParameters.sourceAddresses.end()) {
+		throw std::system_error(make_error_code(error::BAD_ADDRESS), "Source address must belong to current container: " + *badAddr);
+	}
 
-  validateOrders(transactionParameters.destinations, m_currency);
+	validateOrders(transactionParameters.destinations, m_currency);
 
   if (transactionParameters.changeDestination.empty()) {
     if (transactionParameters.sourceAddresses.size() > 1) {

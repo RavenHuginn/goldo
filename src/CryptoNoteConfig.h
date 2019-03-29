@@ -139,16 +139,16 @@ const int      RPC_DEFAULT_PORT                              = 33722;//GOLDO=337
 const size_t   P2P_LOCAL_WHITE_PEERLIST_LIMIT                =  512;
 const size_t   P2P_LOCAL_GRAY_PEERLIST_LIMIT                 =  2048;
 
-const size_t   P2P_CONNECTION_MAX_WRITE_BUFFER_SIZE          = 64 * 1024 * 1024; // 64 MB
+const size_t   P2P_CONNECTION_MAX_WRITE_BUFFER_SIZE          = 128 * 1024 * 1024; // 128 MB
 const uint32_t P2P_DEFAULT_CONNECTIONS_COUNT                 = 8;
 const size_t   P2P_DEFAULT_WHITELIST_CONNECTIONS_PERCENT     = 70;
 const uint32_t P2P_DEFAULT_HANDSHAKE_INTERVAL                = 300;           // seconds
 const uint32_t P2P_DEFAULT_PACKET_MAX_SIZE                   = 50000000;      // 50000000 bytes maximum packet size
 const uint32_t P2P_DEFAULT_PEERS_IN_HANDSHAKE                = 64;
-const uint32_t P2P_DEFAULT_CONNECTION_TIMEOUT                = 5000;          // 5 seconds
-const uint32_t P2P_DEFAULT_PING_CONNECTION_TIMEOUT           = 2000;          // 2 seconds
+const uint32_t P2P_DEFAULT_CONNECTION_TIMEOUT                = 10000;          // 10 seconds
+const uint32_t P2P_DEFAULT_PING_CONNECTION_TIMEOUT           = 10000;          // 10 seconds
 const uint64_t P2P_DEFAULT_INVOKE_TIMEOUT                    = 60 * 2 * 1000; // 2 minutes
-const size_t   P2P_DEFAULT_HANDSHAKE_INVOKE_TIMEOUT          = 5000;          // 5 seconds
+const size_t   P2P_DEFAULT_HANDSHAKE_INVOKE_TIMEOUT          = 10000;          // 10 seconds
 const char     P2P_STAT_TRUSTED_PUB_KEY[]                    = "2a0b780aa4dc2f95cf4251c5c1cdab5205e75edef907e74de6226df2a5778ea5";
 
 const std::initializer_list<const char*> SEED_NODES = {
@@ -226,6 +226,7 @@ const std::initializer_list<CheckpointData> CHECKPOINTS = {
 	{ 2000000,   "4c6f3844f53976539e05d6129c7cc252977e7e4a03a785e1e1794ce17d0080b8" },
 	{ 2100000,   "252c56e990b8921e844fb1deb2b0ec2bea131887241a84661e52ae2a10c58d45" },
 	{ 2200000,   "e712dc9d5da31b5db09d9d9f7c7de9fc8cd86d9c893a69f986d65e9740cbc53b" },
+	{ 2210166,   "5ee06b2afea38364f5ae0d3d68f6572a62ca172ea0030f9a4f5317a806c3208f" },
 	
 
 };

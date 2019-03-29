@@ -114,6 +114,20 @@ struct GetSpendKeys {
   };
 };
 
+
+struct GetMessage {
+    struct Request {
+        std::string privkey;
+        std::string txkey;
+        std::string extra;
+        void serialize(CryptoNote::ISerializer& serializer);
+    };
+    struct Response {
+        std::string message;
+        void serialize(CryptoNote::ISerializer& serializer);
+    };
+};
+
 struct GetBalance {
   struct Request {
     std::string address;
@@ -259,8 +273,10 @@ struct SendTransaction {
     std::vector<WalletRpcOrder> transfers;
     std::string changeAddress;
     uint64_t fee = 0;
+    uint64_t ttl = 0;
     uint32_t anonymity = DEFAULT_ANONYMITY_LEVEL;
     std::string extra;
+	std::string text;
     std::string paymentId;
     uint64_t unlockTime = 0;
 

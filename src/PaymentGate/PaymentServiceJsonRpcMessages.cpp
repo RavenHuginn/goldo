@@ -78,6 +78,16 @@ void GetSpendKeys::Response::serialize(CryptoNote::ISerializer& serializer) {
   serializer(spendPublicKey, "spendPublicKey");
 }
 
+void GetMessage::Request::serialize(CryptoNote::ISerializer& serializer){
+    serializer(privkey, "privkey");
+    serializer(txkey, "txkey");
+    serializer(extra, "extra");
+}
+
+void GetMessage::Response::serialize(CryptoNote::ISerializer& serializer){
+    serializer(message, "message");
+}
+
 void GetBalance::Request::serialize(CryptoNote::ISerializer& serializer) {
   serializer(address, "address");
 }
@@ -218,6 +228,8 @@ void SendTransaction::Request::serialize(CryptoNote::ISerializer& serializer) {
   }
 
   serializer(unlockTime, "unlockTime");
+  serializer(ttl, "ttl");
+  serializer(text, "text");  
 }
 
 void SendTransaction::Response::serialize(CryptoNote::ISerializer& serializer) {

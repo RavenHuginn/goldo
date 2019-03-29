@@ -625,7 +625,12 @@ std::vector<Crypto::Hash> Blockchain::doBuildSparseChain(const Crypto::Hash& sta
 
   return sparseChain;
 }
-
+///////////////////////////////////////////////////////////////////////////////
+uint64_t Blockchain::getBlockTimestamp(uint32_t height) {
+	uint64_t ts = m_blocks[height].bl.timestamp;
+	return ts;
+} 
+///////////////////////////////////////////////////////////////////////////////
 Crypto::Hash Blockchain::getBlockIdByHeight(uint32_t height) {
   std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
   assert(height < m_blockIndex.size());
@@ -853,7 +858,13 @@ difficulty_type Blockchain::get_next_difficulty_for_alternative_chain(const std:
     timestamps.resize(std::min(alt_chain.size(), m_currency.difficultyBlocksCount()));
     commulative_difficulties.resize(std::min(alt_chain.size(), m_currency.difficultyBlocksCount()));
     size_t count = 0;
-    size_t max_i = timestamps.size() - 1;
+//$$
+    if (timestamps.size() < 1) {
+		logger(ERROR, BRIGHT_RED) << "Internal error, timestamps.size() < 1"; return false;
+    }
+	
+    int max_i = timestamps.size() - 1;
+//$$
     BOOST_REVERSE_FOREACH(auto it, alt_chain) {
       timestamps[max_i - count] = it->second.bl.timestamp;
       commulative_difficulties[max_i - count] = it->second.cumulative_difficulty;
@@ -916,38 +927,58 @@ bool Blockchain::prevalidate_miner_transaction(const Block& b, uint32_t height) 
 
   return true;
 }
+///////////////////////////////////////////////////////////////////////////////
+bool Blockchain::validate_miner_transaction(
+		const Block& b, 
+		uint32_t height, 
+		size_t cumulativeBlockSize,
+		uint64_t alreadyGeneratedCoins, 
+		uint64_t fee,
+		uint64_t& reward, 
+		int64_t& emissionChange, 
+		const Crypto::Hash last_BlockHash) {
+		
+	uint64_t minerReward = 0;
+	
+	for (auto& o : b.baseTransaction.outputs) {
+		minerReward += o.amount;
+	}
 
-bool Blockchain::validate_miner_transaction(const Block& b, uint32_t height, size_t cumulativeBlockSize,
-  uint64_t alreadyGeneratedCoins, uint64_t fee,
-  uint64_t& reward, int64_t& emissionChange, const Crypto::Hash last_BlockHash) 
-  {
-  uint64_t minerReward = 0;
-  for (auto& o : b.baseTransaction.outputs) {
-    minerReward += o.amount;
-  }
+	std::vector<size_t> lastBlocksSizes;
+	
+	get_last_n_blocks_sizes(lastBlocksSizes, m_currency.rewardBlocksWindow());
+	size_t blocksSizeMedian = Common::medianValue(lastBlocksSizes);
 
-  std::vector<size_t> lastBlocksSizes;
-  get_last_n_blocks_sizes(lastBlocksSizes, m_currency.rewardBlocksWindow());
-  size_t blocksSizeMedian = Common::medianValue(lastBlocksSizes);
+	if (!m_currency.getBlockReward(blocksSizeMedian, cumulativeBlockSize, alreadyGeneratedCoins, fee, height, reward, emissionChange, last_BlockHash)) {
+		logger(INFO, BRIGHT_WHITE) 
+			<< "block size " 
+			<< cumulativeBlockSize 
+			<< " is bigger than allowed for this blockchain";
+		return false;
+	}
+////$$
+	if (reward + fee < minerReward) {
+		logger(ERROR, BRIGHT_RED) 
+			<< "Coinbase transaction spend too much money: " 
+			<< m_currency.formatAmount(minerReward) 
+			<< ", block reward is " 
+			<< m_currency.formatAmount(reward);
+			
+		return false;
+		
+	} else if (minerReward < reward) {
+		logger(ERROR, BRIGHT_RED) 
+			<< "Coinbase transaction doesn't use full amount of block reward: spent " 
+			<< m_currency.formatAmount(minerReward) 
+			<< ", block reward is " 
+			<< m_currency.formatAmount(reward);
+			
+		return false;
+	}
 
-  if (!m_currency.getBlockReward(blocksSizeMedian, cumulativeBlockSize, alreadyGeneratedCoins, fee, height, reward, emissionChange, last_BlockHash)) {
-    logger(INFO, BRIGHT_WHITE) << "block size " << cumulativeBlockSize << " is bigger than allowed for this blockchain";
-    return false;
-  }
-
-  if (minerReward > reward) {
-    logger(ERROR, BRIGHT_RED) << "Coinbase transaction spend too much money: " << m_currency.formatAmount(minerReward) <<
-      ", block reward is " << m_currency.formatAmount(reward);
-    return false;
-  } else if (minerReward < reward) {
-    logger(ERROR, BRIGHT_RED) << "Coinbase transaction doesn't use full amount of block reward: spent " <<
-      m_currency.formatAmount(minerReward) << ", block reward is " << m_currency.formatAmount(reward);
-    return false;
-  }
-
-  return true;
+	return true;
 }
-
+///////////////////////////////////////////////////////////////////////////////
 bool Blockchain::getBackwardBlocksSize(size_t from_height, std::vector<size_t>& sz, size_t count) {
   std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
   if (!(from_height < m_blocks.size())) {

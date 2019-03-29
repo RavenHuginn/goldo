@@ -585,7 +585,7 @@ bool NodeServer::handshake(CryptoNote::LevinProtocol& proto, P2pConnectionContex
 
     if (!proto.invoke(COMMAND_HANDSHAKE::ID, arg, rsp)) {
 		
-      logger(Logging::ERROR) 
+      logger(Logging::DEBUGGING) 
 		<< context 
 		<< "Failed to invoke COMMAND_HANDSHAKE, closing connection.";
 		
@@ -596,7 +596,7 @@ bool NodeServer::handshake(CryptoNote::LevinProtocol& proto, P2pConnectionContex
 
     if (rsp.node_data.network_id != m_network_id) {
 		
-      logger(Logging::ERROR) 
+      logger(Logging::DEBUGGING) 
 		<< context 
 		<< "COMMAND_HANDSHAKE Failed, wrong network!  (" 
 		<< rsp.node_data.network_id 
@@ -796,7 +796,7 @@ bool NodeServer::try_to_connect_and_handshake_with_new_peer(const NetworkAddress
 
 			if (!handshakeContext.get()) {
 				
-				logger(WARNING) 
+				logger(DEBUGGING) 
 					<< "Failed to HANDSHAKE with peer " 
 					<< na;
 					

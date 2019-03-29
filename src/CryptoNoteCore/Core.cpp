@@ -359,7 +359,7 @@ bool core::get_block_template(Block& b, const AccountPublicAddress& adr, difficu
 		logger(ERROR, BRIGHT_RED) << "Failed to construct miner tx, first chance"; 
 		return false; 
 	}
-
+	
 	size_t cumulative_size = txs_size + getObjectBinarySize(b.baseTransaction);
 	
 	for (size_t try_count = 0; try_count != 10; ++try_count) {
