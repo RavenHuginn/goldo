@@ -50,7 +50,7 @@ WARINING - backup *.wallet file ASAP to another pc, remote location of flash dri
 
 ### Edit a miner batch file
 
-Open *.wallet.address file in notepad and copy your SLD address to clipboard [Ctrl+C]
+Open *.wallet.address file in notepad and copy your Goldo address to clipboard [Ctrl+C]
 
 Edit miner.bat file, paste just copied address instead of default.
 
@@ -74,7 +74,7 @@ Wait to full sync.
 
 If daemon will not find any seed - check your windows firewall and home/office router NAT and firewall rules.
 
-If still failed - ask for assistance at official Ryver forum - https://zzl.ryver.com/application/signup/members/h07SVMfFAvFRGiZ
+If still failed - ask for assistance at official Discord forum - https://discord.gg/nHPN5nQ
 
 ### Start mining
 
@@ -89,7 +89,7 @@ Type command __start_mining__ in the daemon app:
  - demon app must stay worked.
 
 ```
-start_mining your_sld_wallet_address threads_count
+start_mining your_goldo_wallet_address threads_count
 ```
 
 #### By wallet
@@ -134,22 +134,22 @@ https://dl.bintray.com/boostorg/release/1.65.1/source/boost_1_65_1.zip
 
 Download source code from:
 
-https://github.com/monselice/sld
+https://github.com/monselice/goldo
 or clone from Github
-git clone https://github.com/monselice/sld.git sld
+git clone https://github.com/monselice/goldo.git goldo
 
 To build Goldo apps, change to a directory where this file is located (x:\git\), and run commands:
 
 ```
 x:
-cd x:\git\sld\
+cd x:\git\goldo\
 mkdir build
 cd build
 
 cmake -G "Visual Studio 14 2015 Win64" -DBOOST_ROOT=X:/boost_1_65_1 -DBOOST_LIBRARYDIR=X:/boost_1_65_1/lib64-msvc-14.0 ..
 MSBuild Goldo.sln /p:Configuration=release /m
 ```
-The resulting executables can be found in X:\Git\sld\build\src\Release
+The resulting executables can be found in X:\Git\goldo\build\src\Release
 
 ### Maintenance
 
