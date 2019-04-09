@@ -194,5 +194,5 @@ cd ..
 make
 ```
 
-The resulting executables can be found in `sld/build/release/src`.
+The resulting executables can be found in `goldo/build/release/src`.
 
