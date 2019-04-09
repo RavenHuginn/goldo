@@ -185,7 +185,7 @@ sudo apt install build-essential
 sudo apt install libboost-dev libboost-all-dev 
 
 cd ~
-git clone https://github.com/monselice/sld.git sld
+git clone https://github.com/monselice/goldo.git goldo
 cd sld
 mkdir build
 cd build
