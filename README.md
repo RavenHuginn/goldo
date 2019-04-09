@@ -19,13 +19,13 @@ Download ZIP-archive and unpack it to a folder (c:\Bin\Bit)
 
 this archive contains several apps and batch files.
 
-sldd.exe - coin's daemon
+goldod.exe - coin's daemon
 
-sldw.exe - wallet app
+goldow.exe - wallet app
 
-sldm.exe - CPU solo miner app
+goldom.exe - CPU solo miner app
 
-sldp.exe - payments app for exchanges
+goldop.exe - payments app for exchanges
 
 new-wallet.bat - batch file to generate new wallet
 
@@ -157,7 +157,7 @@ Sometimes daemon get stuck and you need to perform some actions.
 
 #### Clear blockchain and other data
 
-To remove Goldo data, press [Win+R] key, type %APPDATA%, and delete sld folder if you have one.
+To remove Goldo data, press [Win+R] key, type %APPDATA%, and delete goldo folder if you have one.
 
 
 ## Linux Users
@@ -186,7 +186,7 @@ sudo apt install libboost-dev libboost-all-dev
 
 cd ~
 git clone https://github.com/monselice/goldo.git goldo
-cd sld
+cd goldo
 mkdir build
 cd build
 cmake ..
